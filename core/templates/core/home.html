@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cotizador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Para los iconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+
+    <script id="tejas-data" type="application/json">
+        {{ tejas|safe }}
+    </script>
+    <script id="paneles-data" type="application/json">
+        {{ paneles|safe }}
+    </script>
+    <script id="inversores-data" type="application/json">
+        {{ inversores|safe }}
+    </script>
+    <script id="datos_externos-data" type="application/json">
+        {{ datos_externos|safe }}
+    </script>
+    <!-- Logo -->
+    <div class="absolute top-4 left-4">
+        <img src="https://via.placeholder.com/150" alt="Logo" class="w-32">
+    </div>
+
+    <!-- Modal Container -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <!-- Progress bar -->
+            <div class="w-full h-2 bg-gray-200">
+                <div id="progress-bar" class="h-2 bg-blue-500 transition-all duration-300" style="width: 0%"></div>
+            </div>
+
+            <!-- Modal content -->
+            <div class="p-6">
+                <div id="form-pages">
+                    <!-- Page 1 -->
+                    <!-- Modificación de la primera página del modal -->
+                    <div class="form-page active" data-page="1">
+                        <h2 class="text-2xl font-bold mb-4">Datos del Cliente</h2>
+                        <div class="space-y-4">
+                            <!-- Nombre completo -->
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Nombre Completo
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Ingrese su nombre completo como aparece en su documento de identidad y factura de energía">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <input type="text" id="fullName" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+
+                            <!-- Consumo Cliente -->
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Consumo Cliente (kwh/mes)
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Ingrese su consumo promedio mensual de energía eléctrica. Lo puede encontrar en su factura de energía en la sección 'Consumo mensual' o 'Histórico de consumo'. Este valor es crucial para dimensionar correctamente su sistema solar.">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <input type="number" id="consumption" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+
+                            <!-- Costo $/kwh -->
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Costo ($/kwh)
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Valor del kilowatt hora que aparece en su factura. Puede encontrarlo como 'Tarifa por kWh' o 'Costo unitario'. Este valor nos ayuda a calcular su ahorro potencial.">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <input type="number" id="costPerKwh" step="0.01"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+
+                            <!-- Contribución -->
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Contribución
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Porcentaje de contribución aplicado a su factura. Este valor puede variar según su tipo de servicio y ubicación.">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <input type="number" id="contribution" value="20" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-12">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <span class="text-gray-500 sm:text-sm">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Factura (calculado automáticamente) -->
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Total Facturado ($)
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Este valor se calcula automáticamente basado en su consumo y tarifa">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <input type="text" id="totalBill" readonly
+                                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm">
+                            </div>
+
+                            <!-- Transformador Cliente -->
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Transformador Cliente (kVA)
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Capacidad del transformador que alimenta su instalación. Puede consultarlo en:
+                                        ENEL: https://www.enel.com.co/es/personas/servicio-al-cliente.html
+                                        EPM: https://www.epm.com.co/portalpagos/
+                                        Este dato es importante para determinar la capacidad máxima de su sistema solar.">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <input type="number" id="transformer" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+
+                            <!-- Área disponible -->
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Área disponible (m²)
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Espacio total disponible para la instalación de paneles solares. Considere áreas como:
+                                        - Techo o terraza
+                                        - Terreno libre
+                                        - Estacionamiento techado
+                                        Un panel típico ocupa aproximadamente 2m². El área debe estar libre de sombras la mayor parte del día.">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <input type="number" id="availableArea" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page 2 -->
+                    <div class="form-page hidden" data-page="2">
+                        <h2 class="text-2xl font-bold mb-4">Selección de Paneles Solares</h2>
+                        
+                        <!-- Selector de modo -->
+                        <div class="mb-6">
+                            <div class="inline-flex rounded-lg border border-gray-200">
+                                <button type="button" id="manualModeBtn" class="px-4 py-2 rounded-l-lg bg-blue-500 text-white">
+                                    Selección Manual
+                                </button>
+                                <button type="button" id="autoModeBtn" class="px-4 py-2 rounded-r-lg border-l">
+                                    Selección Automática
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Modo Manual -->
+                        <div id="manualMode" class="space-y-4">
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Panel Solar
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Seleccione el modelo de panel solar que desea utilizar">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <select id="panelSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Seleccione un panel</option>
+                                </select>
+                                <div id="panelInfo" class="mt-2 text-sm text-gray-600">
+                                    <!-- La información del panel se mostrará aquí -->
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Cantidad de Paneles
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Número de paneles a instalar">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <input type="number" id="panelQuantity" min="1" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+
+                            <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                                <h3 class="font-medium text-blue-900">Cobertura Energética</h3>
+                                <div id="coverageInfo" class="mt-2 text-blue-800">
+                                    <!-- La información de cobertura se mostrará aquí -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modo Automático -->
+                        <div id="autoMode" class="space-y-4 hidden">
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700">Porcentaje de Cobertura Deseado
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Indique qué porcentaje de su consumo actual desea cubrir con energía solar">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <input type="number" id="desiredCoverage" min="1" max="100" value="80"
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-12">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <span class="text-gray-500 sm:text-sm">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-green-50 p-4 rounded-lg mt-4">
+                                <h3 class="font-medium text-green-900">Recomendación del Sistema</h3>
+                                <div id="recommendationInfo" class="mt-2 text-green-800">
+                                    <!-- La recomendación se mostrará aquí -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page 3 -->
+                    <div class="form-page hidden" data-page="3">
+                        <h2 class="text-2xl font-bold mb-4">Equipos y Servicios Adicionales</h2>
+                        <div class="space-y-6">
+                            <!-- Protector de inversores -->
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="protectorInversor" class="rounded text-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">¿Incluir protector de inversores?</span>
+                                </label>
+                                <select id="protectorInversorSelect" class="w-full rounded-md border-gray-300 hidden">
+                                    <option value="protector1">Protector Básico 1000W</option>
+                                </select>
+                            </div>
+
+                            <!-- Export Manager -->
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="exportManager" class="rounded text-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">¿Incluir Export Manager?</span>
+                                </label>
+                                <select id="exportManagerSelect" class="w-full rounded-md border-gray-300 hidden">
+                                    <option value="manager1">Export Manager Pro X1</option>
+                                </select>
+                            </div>
+
+                            <!-- Solis CT -->
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="solisCT" class="rounded text-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">¿Incluir Solis CT?</span>
+                                </label>
+                                <select id="solisCTSelect" class="w-full rounded-md border-gray-300 hidden">
+                                    <option value="solis1">Solis CT 5000</option>
+                                </select>
+                            </div>
+
+                            <!-- Estudio de conexión -->
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="estudioConexion" class="rounded text-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">¿Incluir estudio de conexión?</span>
+                                </label>
+                                <select id="estudioConexionSelect" class="w-full rounded-md border-gray-300 hidden">
+                                    <option value="estudio1">Estudio Básico</option>
+                                    <option value="estudio2">Estudio Avanzado</option>
+                                </select>
+                            </div>
+
+                            <!-- Medidor Bidireccional -->
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="medidorBidireccional" class="rounded text-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">
+                                        ¿Incluir medidor bidireccional?
+                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                            title="Medidor que permite registrar tanto el consumo como la energía generada">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </span>
+                                </label>
+                                <select id="medidorBidireccionalSelect" class="w-full rounded-md border-gray-300 hidden">
+                                    <option value="medidor1">Medidor Monofásico 120/240V</option>
+                                    <option value="medidor2">Medidor Bifásico 240V</option>
+                                    <option value="medidor3">Medidor Trifásico 208/120V</option>
+                                </select>
+                            </div>
+
+                            <!-- Tipo de Teja -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    Tipo de Teja
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                          title="Seleccione el tipo de teja donde se instalarán los paneles">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <select id="tipoTeja" class="w-full rounded-md border-gray-300">
+                                    <option value="">Seleccione el tipo de teja</option>
+                                </select>
+                                <div id="tejaPreview" class="mt-2 relative">
+                                    <img id="tejaImage" class="max-w-xs rounded-lg hidden" alt="Vista previa de teja">
+                                    <p id="tejaPrecio" class="mt-2 text-sm text-gray-600"></p>
+                                </div>
+                            </div>
+
+                            <!-- Consultoría Tributaria -->
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="consultoriaTributaria" class="rounded text-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">¿Incluir consultoría de beneficios tributarios?</span>
+                                </label>
+                            </div>
+
+                            <!-- Resumen de Costos -->
+                            <div class="bg-gray-50 p-4 rounded-lg mt-6">
+                                <h3 class="font-medium text-gray-900">Resumen de Costos</h3>
+                                <div id="costSummary" class="mt-2 space-y-2">
+                                    <!-- El resumen de costos se mostrará aquí -->
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <p class="text-lg font-bold text-gray-900">Precio Total Estimado: <span id="totalPrice">$0</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation buttons -->
+                <div class="mt-6 flex justify-between">
+                    <button id="prevBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 hidden">
+                        Anterior
+                    </button>
+                    <button id="nextBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                        Siguiente
+                    </button>
+                    <button id="submitBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 hidden">
+                        Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom image -->
+    <div class="fixed bottom-0 w-full">
+        <img src="https://via.placeholder.com/1920x200" alt="Footer Image" class="w-full h-32 object-cover">
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            //Logica para la primera pagina
+            const consumptionInput = document.getElementById('consumption');
+            const costPerKwhInput = document.getElementById('costPerKwh');
+            const contributionInput = document.getElementById('contribution');
+            const totalBillInput = document.getElementById('totalBill');
+
+            function calculateTotal() {
+                const consumption = parseFloat(consumptionInput.value) || 0;
+                const costPerKwh = parseFloat(costPerKwhInput.value) || 0;
+                const contribution = parseFloat(contributionInput.value) || 0;
+
+                const baseCost = consumption * costPerKwh;
+                const contributionAmount = baseCost * (contribution / 100);
+                const total = baseCost + contributionAmount;
+
+                totalBillInput.value = total.toLocaleString('es-CO', {
+                    style: 'currency',
+                    currency: 'COP',
+                    minimumFractionDigits: 2
+                });
+            }
+
+            // Event listeners para recalcular cuando cambie cualquier valor
+            consumptionInput.addEventListener('input', calculateTotal);
+            costPerKwhInput.addEventListener('input', calculateTotal);
+            contributionInput.addEventListener('input', calculateTotal);
+            // Fin logica para la primera pagina
+
+            let currentPage = 1;
+            const totalPages = 3;
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressBar = document.getElementById('progress-bar');
+
+            function updatePage() {
+                // Hide all pages
+                document.querySelectorAll('.form-page').forEach(page => {
+                    page.classList.add('hidden');
+                });
+                
+                // Show current page
+                document.querySelector(`.form-page[data-page="${currentPage}"]`).classList.remove('hidden');
+                
+                // Update progress bar
+                progressBar.style.width = `${(currentPage / totalPages) * 100}%`;
+                
+                // Update buttons
+                prevBtn.classList.toggle('hidden', currentPage === 1);
+                nextBtn.classList.toggle('hidden', currentPage === totalPages);
+                submitBtn.classList.toggle('hidden', currentPage !== totalPages);
+            }
+
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updatePage();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updatePage();
+                }
+            });
+
+            submitBtn.addEventListener('click', async () => {
+                // Recoger todos los datos
+                const formData = {
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    companyName: document.getElementById('companyName').value,
+                    businessType: document.getElementById('businessType').value,
+                    budget: document.getElementById('budget').value,
+                    projectDescription: document.getElementById('projectDescription').value
+                };
+
+                try {
+                    const response = await fetch('/submit-form/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')  // Función para obtener el token CSRF
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        alert('Formulario enviado con éxito');
+                        // Redirect or show success message
+                    } else {
+                        alert('Error al enviar el formulario');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al enviar el formulario');
+                }
+            });
+
+            // Función para obtener el token CSRF
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            //Logica para la pagina 2
+            const paneles = JSON.parse(document.getElementById('paneles-data').textContent);
+            const consumoMensual = document.getElementById('consumption').value;
+            // Referencias a elementos del DOM
+            const manualModeBtn = document.getElementById('manualModeBtn');
+            const autoModeBtn = document.getElementById('autoModeBtn');
+            const manualMode = document.getElementById('manualMode');
+            const autoMode = document.getElementById('autoMode');
+            const panelSelect = document.getElementById('panelSelect');
+            const panelInfo = document.getElementById('panelInfo');
+            const panelQuantity = document.getElementById('panelQuantity');
+            const coverageInfo = document.getElementById('coverageInfo');
+            const desiredCoverage = document.getElementById('desiredCoverage');
+            const recommendationInfo = document.getElementById('recommendationInfo');
+            // Cargar datos de tejas
+            const tejas = JSON.parse(document.getElementById('tejas-data').textContent);
+            const tipoTejaSelect = document.getElementById('tipoTeja');
+            const tejaImage = document.getElementById('tejaImage');
+            const tejaPrecio = document.getElementById('tejaPrecio');
+
+            // Poblar selector de tejas
+            tejas.forEach(teja => {
+                const option = document.createElement('option');
+                option.value = teja.id;
+                option.textContent = teja.nombre;
+                tipoTejaSelect.appendChild(option);
+            });
+
+            // Manejar cambio de teja seleccionada
+            tipoTejaSelect.addEventListener('change', function() {
+                const selectedTeja = tejas.find(t => t.id === parseInt(this.value));
+                if (selectedTeja) {
+                    tejaImage.src = selectedTeja.imagen;
+                    tejaImage.classList.remove('hidden');
+                    tejaPrecio.textContent = `Precio: $${selectedTeja.precio_antes_de_iva.toLocaleString()}`;
+                } else {
+                    tejaImage.classList.add('hidden');
+                    tejaPrecio.textContent = '';
+                }
+                calculateTotalCost();
+            });
+            // Poblar el selector de paneles
+            paneles.forEach(panel => {
+                const option = document.createElement('option');
+                option.value = panel.id;
+                option.textContent = panel.name;
+                panelSelect.appendChild(option);
+            });
+
+            // Cambio entre modos manual y automático
+            manualModeBtn.addEventListener('click', () => {
+                manualMode.classList.remove('hidden');
+                autoMode.classList.add('hidden');
+                manualModeBtn.classList.add('bg-blue-500', 'text-white');
+                autoModeBtn.classList.remove('bg-blue-500', 'text-white');
+            });
+
+            autoModeBtn.addEventListener('click', () => {
+                autoMode.classList.remove('hidden');
+                manualMode.classList.add('hidden');
+                autoModeBtn.classList.add('bg-blue-500', 'text-white');
+                manualModeBtn.classList.remove('bg-blue-500', 'text-white');
+            });
+
+            // Función para calcular la cobertura
+            function calculateCoverage(panelPower, quantity, consumption, hsp, security_factor) {
+                const dailyProduction = panelPower * quantity * hsp * security_factor;
+                const monthlyProduction = dailyProduction * 30;
+                //Convertimos de watts a kwatts
+                const monthlyProduction_KW = monthlyProduction / 1000
+                const coverage = (monthlyProduction_KW / consumption) * 100;
+                return Math.min(coverage, 100);
+            }
+
+            // Actualizar información del panel seleccionado
+            panelSelect.addEventListener('change', () => {
+                const selectedPanel = paneles.find(p => p.id === parseInt(panelSelect.value));
+                if (selectedPanel) {
+                    panelInfo.innerHTML = `
+                        <p>Potencia: ${selectedPanel.power}W</p>
+                        <p>Área: ${(selectedPanel.panel_area_in_cm / 10000).toFixed(2)}m²</p>
+                        <p>Precio estimado por unidad: $${selectedPanel.panel_price.toLocaleString()}</p>
+                    `;
+                    calculateManualCoverage();
+                }
+            });
+
+            // Calcular cobertura en modo manual
+            function calculateManualCoverage() {
+                const selectedPanel = paneles.find(p => p.id === parseInt(panelSelect.value));
+                const quantity = parseInt(panelQuantity.value) || 0;
+                const consumption = parseFloat(document.getElementById('consumption').value) || 0;
+
+                if (selectedPanel && quantity > 0 && consumption > 0) {
+                    const security_factor = 0.79
+                    const hsp = 4.40
+                    const coverage = calculateCoverage(selectedPanel.power, quantity, consumption, hsp, security_factor);
+                    coverageInfo.innerHTML = `
+                        <p>Cobertura estimada: ${coverage.toFixed(1)}%</p>
+                        <p>Producción mensual estimada: ${(((selectedPanel.power * quantity * security_factor * hsp)/1000) * 30).toFixed(2)} kWh</p>
+                    `;
+                }
+            }
+
+            // Calcular recomendación automática
+            function calculateAutoRecommendation() {
+                const consumption = parseFloat(document.getElementById('consumption').value) || 0;
+                const desiredPercentage = parseFloat(desiredCoverage.value) || 80;
+                const targetProduction = (consumption * desiredPercentage) / 100;
+
+                // Encontrar la mejor combinación de paneles
+                let bestOption = null;
+                let lowestCost = Infinity;
+                const hsp = 4.4
+                const security_factor = 0.79
+
+                paneles.forEach(panel => {
+                    const neededPanels = Math.ceil(targetProduction / ((panel.power * hsp * 30 * 0.79)/1000));
+                    const totalCost = neededPanels * panel.panel_price;
+
+                    if (totalCost < lowestCost) {
+                        lowestCost = totalCost;
+                        bestOption = {
+                            panel: panel,
+                            quantity: neededPanels,
+                            cost: totalCost
+                        };
+                    }
+                });
+
+                if (bestOption) {
+                    recommendationInfo.innerHTML = `
+                        <p>Panel recomendado: ${bestOption.panel.name}</p>
+                        <p>Cantidad: ${bestOption.quantity} unidades</p>
+                        <p>Potencia total: ${(bestOption.panel.power * bestOption.quantity).toFixed(2)}W</p>
+                        <p>Inversión estimada: $${bestOption.cost.toLocaleString()}</p>
+                    `;
+                }
+            }
+
+            // Event listeners
+            panelQuantity.addEventListener('input', calculateManualCoverage);
+            desiredCoverage.addEventListener('input', calculateAutoRecommendation);
+
+
+            // Manejo de checkboxes y selects
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const select = document.getElementById(checkbox.id + 'Select');
+                if (select) {
+                    checkbox.addEventListener('change', () => {
+                        select.classList.toggle('hidden', !checkbox.checked);
+                        calculateTotalCost();
+                    });
+                }
+            });
+
+            // Cargar tipos de teja
+            const tejaPreview = document.getElementById('tejaPreview');
+
+            // Esta función se llamaría cuando los datos de tejas estén disponibles
+            function loadTejas(tejas) {
+                tejas.forEach(teja => {
+                    const option = document.createElement('option');
+                    option.value = teja.id;
+                    option.textContent = teja.nombre;
+                    tipoTejaSelect.appendChild(option);
+                });
+            }
+
+            tipoTejaSelect.addEventListener('change', function() {
+                // Aquí actualizarías la imagen de la teja seleccionada
+                const selectedTeja = tejas.find(t => t.id === parseInt(this.value));
+                if (selectedTeja) {
+                    tejaPreview.innerHTML = `<img src="${selectedTeja.imagen}" alt="${selectedTeja.nombre}" class="max-w-xs rounded-lg">`;
+                }
+                calculateTotalCost();
+            });
+
+            // Calcular costo total
+            function calculateTotalCost() {
+                let totalCost = 0;
+                
+                // Costo base del sistema (paneles + inversores)
+                const selectedPanel = paneles.find(p => p.id === parseInt(panelSelect.value));
+                const quantity = parseInt(panelQuantity.value) || 0;
+                
+                if (selectedPanel && quantity > 0) {
+                    totalCost += selectedPanel.panel_price * quantity;
+                }
+
+                // Costos adicionales según selecciones
+                if (document.getElementById('protectorInversor').checked) {
+                    totalCost += 1868977; // Precio ejemplo
+                }
+
+                if (document.getElementById('exportManager').checked) {
+                    totalCost += 415942; // Precio ejemplo
+                }
+
+                if (document.getElementById('solisCT').checked) {
+                    totalCost += 288889; // Precio ejemplo
+                }
+
+                if (document.getElementById('solisCT').checked) {
+                    totalCost += 288889; // Precio ejemplo
+                }
+
+                const selectedTejaId = parseInt(tipoTejaSelect.value);
+
+                if (selectedTejaId) {
+                    const selectedTeja = tejas.find(t => t.id === selectedTejaId);
+                    if (selectedTeja) {
+                        totalCost += selectedTeja.precio_antes_de_iva;
+                    }
+                }
+
+                // Agregar costo del medidor bidireccional si está seleccionado
+                if (document.getElementById('medidorBidireccional').checked) {
+                    const medidorSelect = document.getElementById('medidorBidireccionalSelect');
+                    switch(medidorSelect.value) {
+                        case 'medidor1':
+                            totalCost += 800000; // Precio ejemplo medidor monofásico
+                            break;
+                        case 'medidor2':
+                            totalCost += 1200000; // Precio ejemplo medidor bifásico
+                            break;
+                        case 'medidor3':
+                            totalCost += 1500000; // Precio ejemplo medidor trifásico
+                            break;
+                    }
+                }
+
+                //Agregar mas costos si a futuro existen    
+
+                // Consultoría tributaria (2.5% del subtotal)
+                if (document.getElementById('consultoriaTributaria').checked) {
+                    totalCost += totalCost * 0.025;
+                }
+
+                // Actualizar el resumen de costos
+                document.getElementById('costSummary').innerHTML = `
+                    <p>Costo base del sistema: $${(selectedPanel.panel_price * quantity).toLocaleString()}</p>
+                    ${selectedTejaId ? `<p>Costo de teja: $${tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva.toLocaleString()}</p>` : ''}
+                    ${document.getElementById('medidorBidireccional').checked ? `<p>Medidor bidireccional: $${getMedidorCost().toLocaleString()}</p>` : ''}
+                    <!-- Otros costos -->
+                `;
+
+                document.getElementById('totalPrice').textContent = `$${totalCost.toLocaleString()}`;
+            }
+
+            //añadir bd de medidores bidireccional
+            function getMedidorCost() {
+                const medidorSelect = document.getElementById('medidorBidireccionalSelect');
+                switch(medidorSelect.value) {
+                    case 'medidor1': return 800000;
+                    case 'medidor2': return 1200000;
+                    case 'medidor3': return 1500000;
+                    default: return 0;
+                }
+            }
+
+            // Llamar a calculateTotalCost cuando cambie cualquier selección
+            document.querySelectorAll('select, input[type="checkbox"]').forEach(element => {
+                element.addEventListener('change', calculateTotalCost);
+            });
+
+
+        });
+    </script>
+</body>
+</html>
