@@ -4,6 +4,45 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import xmlrpc.client
 from .models import DatosExternos, TipoTeja, Viaticos, Ubicacion
+from django.http import JsonResponse
+
+def get_viaticos(request):
+    try:
+        viaticos = Viaticos.objects.first()
+        if viaticos:
+            viaticos_data = {
+                'precio_hospedaje': float(viaticos.precio_hospedaje),
+                'precio_viaticos': float(viaticos.precio_viaticos)
+            }
+        else:
+            viaticos_data = {
+                'precio_hospedaje': 0,
+                'precio_viaticos': 0
+            }
+        return JsonResponse(viaticos_data)
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'precio_hospedaje': 0,
+            'precio_viaticos': 0
+        }, status=500)
+
+def get_locations(request):
+    locations = Ubicacion.objects.all()
+    locations_data = [{'id': loc.id, 'nombre': loc.nombre, 'km_desde_medellin': loc.km_desde_medellin} 
+                     for loc in locations]
+    return JsonResponse(locations_data, safe=False)
+
+def get_viaticos(request):
+    viaticos = Viaticos.objects.first()
+    if viaticos:
+        viaticos_data = {
+            'precio_hospedaje': float(viaticos.precio_hospedaje),
+            'precio_viaticos': float(viaticos.precio_viaticos)
+        }
+    else:
+        viaticos_data = {'precio_hospedaje': 0, 'precio_viaticos': 0}
+    return JsonResponse(viaticos_data)
 
 def home(request):
 
@@ -65,7 +104,9 @@ def home(request):
         inversor_id = inversor['id']
         inversor_name = inversor['display_name']
         inversor_power = inversor['input_dc']
-        inversores_data.append({'id': inversor_id, 'name': inversor_name, 'power': inversor_power})
+        inversor_sales_count = inversor['sales_count']
+        inversor_price = inversor['list_price']
+        inversores_data.append({'id': inversor_id, 'name': inversor_name, 'power': inversor_power, 'inversor_price': inversor_price, 'sales_count': inversor_sales_count})
 
     # Convertir a JSON
     tejas_data = json.dumps(tejas_data)

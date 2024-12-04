@@ -222,6 +222,58 @@
                     <div class="form-page hidden" data-page="3">
                         <h2 class="text-2xl font-bold mb-4">Equipos y Servicios Adicionales</h2>
                         <div class="space-y-6">
+
+                            <!-- Inversores -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    Inversor
+                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                        title="Seleccione el inversor adecuado para su sistema">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <select id="inversorSelect" class="w-full rounded-md border-gray-300">
+                                    <option value="">Seleccione un inversor</option>
+                                </select>
+                                <div id="inversorInfo" class="mt-2 text-sm text-gray-600"></div>
+                            </div>
+
+                            <!-- Viáticos y Personal -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium">Viáticos y Personal</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Días de trabajo</label>
+                                        <input type="number" id="workDays" min="1" max="30" value="2" 
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <p class="mt-1 text-sm text-gray-500">Mínimo 1 día</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Número de trabajadores</label>
+                                        <input type="number" id="workers" min="1" max="10" value="2" 
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <p class="mt-1 text-sm text-gray-500">Mínimo 1 trabajador</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ubicación -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium">Ubicación</h3>
+                                <div class="space-y-2">
+                                    <select id="locationSelect" class="w-full rounded-md border-gray-300">
+                                        <option value="">Seleccione una ubicación</option>
+                                        <option value="custom">Otra ubicación</option>
+                                    </select>
+                                </div>
+                                <div id="customLocationDiv" class="space-y-2 hidden">
+                                    <input type="text" id="customLocation" placeholder="Nombre de la ciudad" 
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <input type="number" id="customDistance" placeholder="Distancia en km desde Medellín" 
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                            </div>
+
                             <!-- Protector de inversores -->
                             <div class="space-y-2">
                                 <label class="flex items-center space-x-2">
@@ -348,7 +400,99 @@
     </div>
 
     <script>
+
+        let locations = [];
+
+        function initializeLocations() {
+            fetch('/api/locations/')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    locations = data;
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(location => {
+                            const option = document.createElement('option');
+                            option.value = location.id;
+                            option.textContent = location.nombre;
+                            locationSelect.insertBefore(option, locationSelect.lastElementChild);
+                        });
+                    } else {
+                        console.log('No hay ubicaciones disponibles');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error cargando ubicaciones:', error);
+                    // Opcional: mostrar mensaje de error al usuario
+                    const errorOption = document.createElement('option');
+                    errorOption.textContent = 'Error cargando ubicaciones';
+                    errorOption.disabled = true;
+                    locationSelect.appendChild(errorOption);
+                });
+        }
+
+        function calculateTravelCosts() {
+            let distance = 0;
+            try {
+                if (locationSelect.value === 'custom') {
+                    distance = parseFloat(customDistance.value) || 0;
+                } else if (locationSelect.value && locations.length > 0) {
+                    const selectedLocation = locations.find(l => l.id === parseInt(locationSelect.value));
+                    if (selectedLocation) {
+                        distance = selectedLocation.km_desde_medellin;
+                    }
+                }
+            } catch (error) {
+                console.error('Error calculando costos de viaje:', error);
+                return 0;
+            }
+            return distance * 2 * 2300;
+        }
+
+        let viaticos = null;
+
+        // Función para cargar viáticos
+        function initializeViaticos() {
+            fetch('/api/viaticos/')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    viaticos = data;
+                    console.log('Viáticos cargados:', viaticos);
+                })
+                .catch(error => {
+                    console.error('Error cargando viáticos:', error);
+                    viaticos = { precio_hospedaje: 0, precio_viaticos: 0 };
+                });
+        }
+
+        // Función para calcular viáticos
+        function calculateViaticosCosts() {
+            if (!viaticos) {
+                console.warn('Datos de viáticos no disponibles');
+                return 0;
+            }
+
+            const workDays = parseInt(document.getElementById('workDays').value) || 2;
+            const workers = parseInt(document.getElementById('workers').value) || 2;
+            
+            const costoHospedaje = viaticos.precio_hospedaje * workDays * workers;
+            const costoViaticos = viaticos.precio_viaticos * workDays * workers;
+            
+            return costoHospedaje + costoViaticos;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+
+            initializeLocations();
+            initializeViaticos();
 
             //Logica para la primera pagina
             const consumptionInput = document.getElementById('consumption');
@@ -658,7 +802,7 @@
 
                 // Costos adicionales según selecciones
                 if (document.getElementById('protectorInversor').checked) {
-                    totalCost += 1868977; // Precio ejemplo
+                    totalCost += 1428853; // Precio ejemplo
                 }
 
                 if (document.getElementById('exportManager').checked) {
@@ -669,8 +813,8 @@
                     totalCost += 288889; // Precio ejemplo
                 }
 
-                if (document.getElementById('solisCT').checked) {
-                    totalCost += 288889; // Precio ejemplo
+                if (document.getElementById('estudioConexion').checked) {
+                    totalCost += 288889; // Precio ejemplo pero tendra que venir desde la base de datos
                 }
 
                 const selectedTejaId = parseInt(tipoTejaSelect.value);
@@ -698,6 +842,10 @@
                     }
                 }
 
+                // Calcular costos de viáticos
+                const viaticosCost = calculateViaticosCosts();
+                const travelCost = calculateTravelCosts();
+
                 //Agregar mas costos si a futuro existen    
 
                 // Consultoría tributaria (2.5% del subtotal)
@@ -708,13 +856,19 @@
                 // Actualizar el resumen de costos
                 document.getElementById('costSummary').innerHTML = `
                     <p>Costo base del sistema: $${(selectedPanel.panel_price * quantity).toLocaleString()}</p>
-                    ${selectedTejaId ? `<p>Costo de teja: $${tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva.toLocaleString()}</p>` : ''}
-                    ${document.getElementById('medidorBidireccional').checked ? `<p>Medidor bidireccional: $${getMedidorCost().toLocaleString()}</p>` : ''}
-                    <!-- Otros costos -->
+                    ${selectedInversor ? `<p>Inversor: $${selectedInversor.inversor_price.toLocaleString()}</p>` : ''}
+                    ${selectedTejaId ? `<p>Teja: $${tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva.toLocaleString()}</p>` : ''}
+                    <p>Material eléctrico: $${datos_externos.material_electrico.toLocaleString()}</p>
+                    <p>Certificación RETIE: $${datos_externos.certificacion_retie.toLocaleString()}</p>
+                    <p>Imprevistos (${datos_externos.imprevistos}%): $${imprevistosAmount.toLocaleString()}</p>
+                    <p>Viáticos: $${viaticosCost.toLocaleString()}</p>
+                    <p>Costos de transporte: $${travelCost.toLocaleString()}</p>
                 `;
 
                 document.getElementById('totalPrice').textContent = `$${totalCost.toLocaleString()}`;
             }
+
+            
 
             //añadir bd de medidores bidireccional
             function getMedidorCost() {
@@ -731,6 +885,147 @@
             document.querySelectorAll('select, input[type="checkbox"]').forEach(element => {
                 element.addEventListener('change', calculateTotalCost);
             });
+
+
+            // Cargar datos externos
+            const datos_externos = JSON.parse(document.getElementById('datos_externos-data').textContent);
+            const inversores = JSON.parse(document.getElementById('inversores-data').textContent);
+
+            // Configurar HSP y factor de seguridad desde datos externos
+            const hsp = datos_externos.hsp;
+            const security_factor = datos_externos.security_factor;
+
+            // Poblar selector de inversores
+            const inversorSelect = document.getElementById('inversorSelect');
+            inversores.forEach(inversor => {
+                const option = document.createElement('option');
+                option.value = inversor.id;
+                option.textContent = `${inversor.name} - ${inversor.power}W`;
+                inversorSelect.appendChild(option);
+            });
+
+            // Manejo de ubicaciones
+            const locationSelect = document.getElementById('locationSelect');
+            const customLocationDiv = document.getElementById('customLocationDiv');
+            const customLocation = document.getElementById('customLocation');
+            const customDistance = document.getElementById('customDistance');
+
+            document.getElementById('workDays').addEventListener('input', calculateTotalCost);
+            document.getElementById('workers').addEventListener('input', calculateTotalCost);
+            document.getElementById('customDistance').addEventListener('input', calculateTotalCost);
+            locationSelect.addEventListener('change', calculateTotalCost);
+
+            // Función para calcular viáticos
+            function calculateViaticosCosts() {
+                const workDays = parseInt(document.getElementById('workDays').value) || 2;
+                const workers = parseInt(document.getElementById('workers').value) || 2;
+                // Estos valores deberían venir de tu base de datos
+                const costoHospedaje = viaticos.precio_hospedaje;
+                const costoViaticos = viaticos.precio_viaticos;
+                
+                return (costoHospedaje + costoViaticos) * workDays * workers;
+            }
+
+            // Modificar la función calculateTotalCost existente
+            function calculateTotalCost() {
+                let totalCost = 0;
+
+                // Costo base del sistema (paneles + inversores)
+                const selectedPanel = paneles.find(p => p.id === parseInt(panelSelect.value));
+                const quantity = parseInt(panelQuantity.value) || 0;
+                console.log("precio panel y cantidad");
+                console.log(selectedPanel.panel_price)
+                console.log(quantity)
+
+                if (selectedPanel && quantity > 0) {
+                    totalCost += selectedPanel.panel_price * quantity;
+                }
+
+                // Costos adicionales según selecciones
+                if (document.getElementById('protectorInversor').checked) {
+                    totalCost += 1868977; // Precio ejemplo
+                }
+
+                if (document.getElementById('exportManager').checked) {
+                    totalCost += 415942; // Precio ejemplo
+                }
+
+                if (document.getElementById('solisCT').checked) {
+                    totalCost += 288889; // Precio ejemplo
+                }
+
+                if (document.getElementById('estudioConexion').checked) {
+                    totalCost += 288889; // Precio ejemplo pero tendra que venir desde la base de datos
+                }
+
+                const selectedTejaId = parseInt(tipoTejaSelect.value);
+
+                if (selectedTejaId) {
+                    const selectedTeja = tejas.find(t => t.id === selectedTejaId);
+                    if (selectedTeja) {
+                        totalCost += selectedTeja.precio_antes_de_iva;
+                    }
+                }
+
+                // Agregar costo del medidor bidireccional si está seleccionado
+                if (document.getElementById('medidorBidireccional').checked) {
+                    const medidorSelect = document.getElementById('medidorBidireccionalSelect');
+                    switch(medidorSelect.value) {
+                        case 'medidor1':
+                            totalCost += 800000; // Precio ejemplo medidor monofásico
+                            break;
+                        case 'medidor2':
+                            totalCost += 1200000; // Precio ejemplo medidor bifásico
+                            break;
+                        case 'medidor3':
+                            totalCost += 1500000; // Precio ejemplo medidor trifásico
+                            break;
+                    }
+                }
+
+                // Calcular costos de viáticos
+                const viaticosCost = calculateViaticosCosts();
+                const travelCost = calculateTravelCosts();
+
+                //Agregar mas costos si a futuro existen    
+
+
+                // Agregar costo del inversor
+                const selectedInversor = inversores.find(inv => inv.id === parseInt(inversorSelect.value));
+                if (selectedInversor) {
+                    console.log("inversor price: ")
+                    console.log(selectedInversor.inversor_price)
+                    totalCost += selectedInversor.inversor_price;
+                }
+
+                // Agregar costos externos
+                const imprevistosAmount = totalCost * (datos_externos.imprevistos / 100);
+                totalCost += imprevistosAmount;
+                totalCost += datos_externos.material_electrico;
+                totalCost += datos_externos.certificacion_retie;
+
+                // Consultoría tributaria (2.5% del subtotal)
+                if (document.getElementById('consultoriaTributaria').checked) {
+                    totalCost += totalCost * 0.025;
+                }
+                // Agregar costos de viaje y viáticos
+                totalCost += calculateTravelCosts();
+                totalCost += calculateViaticosCosts();
+
+
+                // Actualizar el resumen de costos
+                document.getElementById('costSummary').innerHTML = `
+                    <p>Costo base del sistema: $${(selectedPanel.panel_price * quantity).toLocaleString()}</p>
+                    ${selectedInversor ? `<p>Inversor: $${selectedInversor.inversor_price.toLocaleString()}</p>` : ''}
+                    ${selectedTejaId ? `<p>Teja: $${tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva.toLocaleString()}</p>` : ''}
+                    <p>Material eléctrico: $${datos_externos.material_electrico.toLocaleString()}</p>
+                    <p>Certificación RETIE: $${datos_externos.certificacion_retie.toLocaleString()}</p>
+                    <p>Imprevistos (${datos_externos.imprevistos}%): $${imprevistosAmount.toLocaleString()}</p>
+                    <p>Viáticos y transporte: $${(calculateViaticosCosts() + calculateTravelCosts()).toLocaleString()}</p>
+                `;
+
+                document.getElementById('totalPrice').textContent = `$${totalCost.toLocaleString()}`;
+            }
 
 
         });

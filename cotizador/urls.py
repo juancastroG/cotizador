@@ -25,6 +25,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
     path('submit-form/', views.submit_form, name='submit_form'),
+    path('api/locations/', views.get_locations, name='get_locations'),
+    path('api/viaticos/', views.get_viaticos, name='get_viaticos'),
+    path('api/viaticos/', views.get_viaticos, name='get_viaticos'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
