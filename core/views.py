@@ -3,46 +3,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 import xmlrpc.client
-from .models import DatosExternos, TipoTeja, Viaticos, Ubicacion
+from .models import DatosExternos, TipoTeja, Viaticos, Ubicacion, Estudio_conexion
 from django.http import JsonResponse
 
-def get_viaticos(request):
-    try:
-        viaticos = Viaticos.objects.first()
-        if viaticos:
-            viaticos_data = {
-                'precio_hospedaje': float(viaticos.precio_hospedaje),
-                'precio_viaticos': float(viaticos.precio_viaticos)
-            }
-        else:
-            viaticos_data = {
-                'precio_hospedaje': 0,
-                'precio_viaticos': 0
-            }
-        return JsonResponse(viaticos_data)
-    except Exception as e:
-        return JsonResponse({
-            'error': str(e),
-            'precio_hospedaje': 0,
-            'precio_viaticos': 0
-        }, status=500)
-
-def get_locations(request):
-    locations = Ubicacion.objects.all()
-    locations_data = [{'id': loc.id, 'nombre': loc.nombre, 'km_desde_medellin': loc.km_desde_medellin} 
-                     for loc in locations]
-    return JsonResponse(locations_data, safe=False)
-
-def get_viaticos(request):
-    viaticos = Viaticos.objects.first()
-    if viaticos:
-        viaticos_data = {
-            'precio_hospedaje': float(viaticos.precio_hospedaje),
-            'precio_viaticos': float(viaticos.precio_viaticos)
-        }
-    else:
-        viaticos_data = {'precio_hospedaje': 0, 'precio_viaticos': 0}
-    return JsonResponse(viaticos_data)
 
 def home(request):
 
@@ -53,7 +16,9 @@ def home(request):
         security_factor = datos_externos.security_factor
         imprevistos = datos_externos.imprevistos
         material_electrico = datos_externos.material_electrico
-        certificacion_retie = datos_externos.certificacion_retie
+        certificacion_retie_v1 = datos_externos.certificacion_retie_v1
+        certificacion_retie_v2 = datos_externos.certificacion_retie_v2
+
 
     else:
         # Si no hay datos, asignar valores por defecto
@@ -61,30 +26,23 @@ def home(request):
         security_factor = 0
         imprevistos = 0
         material_electrico = 0
-        certificacion_retie = 0
+        certificacion_retie_v1 = 0
+        certificacion_retie_v2 = 0
 
     datos_externos_dict = {
         'hsp': hsp,
         'security_factor': security_factor,
         'imprevistos': imprevistos,
         'material_electrico': material_electrico,
-        'certificacion_retie': certificacion_retie
+        'certificacion_retie_v1': certificacion_retie_v1,
+        'certificacion_retie_v2': certificacion_retie_v2
     }
 
     # Obtener datos de tejas de la base de datos
-    tejas = TipoTeja.objects.all()
-    tejas_data = []
+    tejas_data = get_tejas()
 
-    
-    # Convertir la URL de la imagen a string para JSON
-    for teja in tejas:
-        teja_dict = {
-            'id': teja.id,
-            'nombre': teja.nombre,
-            'precio_antes_de_iva': float(teja.precio_antes_de_iva),
-            'imagen': request.build_absolute_uri(teja.imagen.url) if teja.imagen else ''
-        }
-        tejas_data.append(teja_dict)
+    #Cargar estudios de conexión
+    estudio_conexion_data = get_estudio_conexion()
 
     # obtener datos de odoo
     paneles, inversores = connectin_oddo()
@@ -113,8 +71,70 @@ def home(request):
     paneles_data = json.dumps(paneles_data)
     inversores_data = json.dumps(inversores_data)
     datos_externos_data = json.dumps(datos_externos_dict)
+    estudio_conexion_data = json.dumps(estudio_conexion_data)
 
-    return render(request, 'core/home.html', {'paneles': paneles_data, 'inversores': inversores_data, 'tejas': tejas_data, 'datos_externos': datos_externos_data})
+    return render(request, 'core/home.html', {'paneles': paneles_data, 'inversores': inversores_data, 'tejas': tejas_data, 'datos_externos': datos_externos_data, 'estudios_de_conexion': estudio_conexion_data})
+
+
+def get_viaticos(request):
+    try:
+        viaticos = Viaticos.objects.first()
+        if viaticos:
+            viaticos_data = {
+                'precio_hospedaje': float(viaticos.precio_hospedaje),
+                'precio_viaticos': float(viaticos.precio_viaticos)
+            }
+        else:
+            viaticos_data = {
+                'precio_hospedaje': 0,
+                'precio_viaticos': 0
+            }
+        return JsonResponse(viaticos_data)
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'precio_hospedaje': 0,
+            'precio_viaticos': 0
+        }, status=500)
+    
+def get_estudio_conexion():
+    try:
+         # Obtener datos de estudio de conexión de la base de datos
+        estudio_conexion = Estudio_conexion.objects.all()
+        estudio_conexion_data = [{'id': ec.id, 'nombre': ec.nombre, 'precio': float(ec.precio)}
+                     for ec in estudio_conexion]
+        return estudio_conexion_data
+    
+    except Exception as e:
+
+        return JsonResponse({
+            'error': str(e),
+            'id': 0,
+            'nombre': "No hay datos disponibles",
+            'precio': 0
+        }, status=500)
+
+def get_locations(request):
+    locations = Ubicacion.objects.all()
+    locations_data = [{'id': loc.id, 'nombre': loc.nombre, 'km_desde_medellin': loc.km_desde_medellin} 
+                     for loc in locations]
+    return JsonResponse(locations_data, safe=False)
+
+def get_tejas():
+    try:
+        tejas = TipoTeja.objects.all()
+        tejas_data = [{'id': teja.id, 'nombre': teja.nombre, 'precio_antes_de_iva': float(teja.precio_antes_de_iva)}
+                      for teja in tejas]
+        return tejas_data
+    
+    # return tejas_data
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'id': 0,
+            'nombre': "No hay datos disponibles",
+            'precio_antes_de_iva': 0
+        }, status=500)
 
 
 @csrf_exempt  # Solo para desarrollo, en producción maneja el CSRF apropiadamente

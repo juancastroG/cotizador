@@ -235,6 +235,16 @@
                                 <select id="inversorSelect" class="w-full rounded-md border-gray-300">
                                     <option value="">Seleccione un inversor</option>
                                 </select>
+                                <div class="relative">
+                                    <label class="block text-sm font-medium text-gray-700">Cantidad de Inversores
+                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                            title="Número de inversores a instalar">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="inversorQuantity_input" min="1" 
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
                                 <div id="inversorInfo" class="mt-2 text-sm text-gray-600"></div>
                             </div>
 
@@ -283,6 +293,17 @@
                                 <select id="protectorInversorSelect" class="w-full rounded-md border-gray-300 hidden">
                                     <option value="protector1">Protector Básico 1000W</option>
                                 </select>
+
+                                <div class="relative hidden" id="protectorInversorQuantity">
+                                    <label class="block text-sm font-medium text-gray-700">Cantidad de protectores de inversores
+                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                            title="Número de protectores de inversores a instalar">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="protectorQuantity_input" min="1" value="1"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
                             </div>
 
                             <!-- Export Manager -->
@@ -294,6 +315,16 @@
                                 <select id="exportManagerSelect" class="w-full rounded-md border-gray-300 hidden">
                                     <option value="manager1">Export Manager Pro X1</option>
                                 </select>
+                                <div class="relative hidden" id="exportManagerQuantity">
+                                    <label class="block text-sm font-medium text-gray-700">Cantidad de exportManager
+                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                            title="Número de exportManager a instalar">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="exportQuantity_input" min="1" value="1"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
                             </div>
 
                             <!-- Solis CT -->
@@ -305,6 +336,16 @@
                                 <select id="solisCTSelect" class="w-full rounded-md border-gray-300 hidden">
                                     <option value="solis1">Solis CT 5000</option>
                                 </select>
+                                <div class="relative hidden" id="solisCTQuantity">
+                                    <label class="block text-sm font-medium text-gray-700">Cantidad de solisCT
+                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                            title="Número de solisCT a instalar">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="solisCTQuantity_input" min="1" value="1"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
                             </div>
 
                             <!-- Estudio de conexión -->
@@ -336,6 +377,16 @@
                                     <option value="medidor2">Medidor Bifásico 240V</option>
                                     <option value="medidor3">Medidor Trifásico 208/120V</option>
                                 </select>
+                                <div class="relative hidden" id="medidorBidireccionalQuantity">
+                                    <label class="block text-sm font-medium text-gray-700">Cantidad de medidor bidireccional
+                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                            title="Número de medidor bidireccional a instalar">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="medidorBidireccionalQuantity_input" min="1" value="1"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
                             </div>
 
                             <!-- Tipo de Teja -->
@@ -350,6 +401,17 @@
                                 <select id="tipoTeja" class="w-full rounded-md border-gray-300">
                                     <option value="">Seleccione el tipo de teja</option>
                                 </select>
+                                <div class="relative"></div>
+                                    <label class="block text-sm font-medium text-gray-700">Cantidad de tejas
+                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
+                                            title="Número de tejas a instalar">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="tejasQuantity_input" min="1" value="1"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                                
                                 <div id="tejaPreview" class="mt-2 relative">
                                     <img id="tejaImage" class="max-w-xs rounded-lg hidden" alt="Vista previa de teja">
                                     <p id="tejaPrecio" class="mt-2 text-sm text-gray-600"></p>
@@ -421,11 +483,9 @@
                             locationSelect.insertBefore(option, locationSelect.lastElementChild);
                         });
                     } else {
-                        console.log('No hay ubicaciones disponibles');
                     }
                 })
                 .catch(error => {
-                    console.error('Error cargando ubicaciones:', error);
                     // Opcional: mostrar mensaje de error al usuario
                     const errorOption = document.createElement('option');
                     errorOption.textContent = 'Error cargando ubicaciones';
@@ -446,7 +506,6 @@
                     }
                 }
             } catch (error) {
-                console.error('Error calculando costos de viaje:', error);
                 return 0;
             }
             return distance * 2 * 2300;
@@ -465,10 +524,8 @@
                 })
                 .then(data => {
                     viaticos = data;
-                    console.log('Viáticos cargados:', viaticos);
                 })
                 .catch(error => {
-                    console.error('Error cargando viáticos:', error);
                     viaticos = { precio_hospedaje: 0, precio_viaticos: 0 };
                 });
         }
@@ -589,7 +646,6 @@
                         alert('Error al enviar el formulario');
                     }
                 } catch (error) {
-                    console.error('Error:', error);
                     alert('Error al enviar el formulario');
                 }
             });
@@ -620,7 +676,15 @@
             const autoMode = document.getElementById('autoMode');
             const panelSelect = document.getElementById('panelSelect');
             const panelInfo = document.getElementById('panelInfo');
+            // Obtenemos las cantidades de los campos
             const panelQuantity = document.getElementById('panelQuantity');
+            const inversorQuantity = document.getElementById('inversorQuantity_input')
+            const protectorQuantity = document.getElementById('protectorQuantity_input')
+            const exportManagerQuantity = document.getElementById('exportQuantity_input')
+            const solisCTQuantity = document.getElementById('solisCTQuantity_input')
+            const medidorBidireccionalQuantity = document.getElementById('medidorBidireccionalQuantity_input')
+            const tejasQuantity = document.getElementById('tejasQuantity_input')
+
             const coverageInfo = document.getElementById('coverageInfo');
             const desiredCoverage = document.getElementById('desiredCoverage');
             const recommendationInfo = document.getElementById('recommendationInfo');
@@ -752,14 +816,22 @@
 
             // Event listeners
             panelQuantity.addEventListener('input', calculateManualCoverage);
+            inversorQuantity.addEventListener('input',calculateTotalCost);
+            protectorQuantity.addEventListener('input',calculateTotalCost);
             desiredCoverage.addEventListener('input', calculateAutoRecommendation);
+            exportManagerQuantity.addEventListener('input',calculateTotalCost);
+            solisCTQuantity.addEventListener('input',calculateTotalCost);
+            medidorBidireccionalQuantity.addEventListener('input',calculateTotalCost);
+            tejasQuantity.addEventListener('input',calculateTotalCost);
 
 
             // Manejo de checkboxes y selects
             document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 const select = document.getElementById(checkbox.id + 'Select');
+                const quantity_check = document.getElementById(checkbox.id + 'Quantity');
                 if (select) {
                     checkbox.addEventListener('change', () => {
+                        quantity_check.classList.toggle('hidden', !checkbox.checked);
                         select.classList.toggle('hidden', !checkbox.checked);
                         calculateTotalCost();
                     });
@@ -787,87 +859,6 @@
                 }
                 calculateTotalCost();
             });
-
-            // Calcular costo total
-            function calculateTotalCost() {
-                let totalCost = 0;
-                
-                // Costo base del sistema (paneles + inversores)
-                const selectedPanel = paneles.find(p => p.id === parseInt(panelSelect.value));
-                const quantity = parseInt(panelQuantity.value) || 0;
-                
-                if (selectedPanel && quantity > 0) {
-                    totalCost += selectedPanel.panel_price * quantity;
-                }
-
-                // Costos adicionales según selecciones
-                if (document.getElementById('protectorInversor').checked) {
-                    totalCost += 1428853; // Precio ejemplo
-                }
-
-                if (document.getElementById('exportManager').checked) {
-                    totalCost += 415942; // Precio ejemplo
-                }
-
-                if (document.getElementById('solisCT').checked) {
-                    totalCost += 288889; // Precio ejemplo
-                }
-
-                if (document.getElementById('estudioConexion').checked) {
-                    totalCost += 288889; // Precio ejemplo pero tendra que venir desde la base de datos
-                }
-
-                const selectedTejaId = parseInt(tipoTejaSelect.value);
-
-                if (selectedTejaId) {
-                    const selectedTeja = tejas.find(t => t.id === selectedTejaId);
-                    if (selectedTeja) {
-                        totalCost += selectedTeja.precio_antes_de_iva;
-                    }
-                }
-
-                // Agregar costo del medidor bidireccional si está seleccionado
-                if (document.getElementById('medidorBidireccional').checked) {
-                    const medidorSelect = document.getElementById('medidorBidireccionalSelect');
-                    switch(medidorSelect.value) {
-                        case 'medidor1':
-                            totalCost += 800000; // Precio ejemplo medidor monofásico
-                            break;
-                        case 'medidor2':
-                            totalCost += 1200000; // Precio ejemplo medidor bifásico
-                            break;
-                        case 'medidor3':
-                            totalCost += 1500000; // Precio ejemplo medidor trifásico
-                            break;
-                    }
-                }
-
-                // Calcular costos de viáticos
-                const viaticosCost = calculateViaticosCosts();
-                const travelCost = calculateTravelCosts();
-
-                //Agregar mas costos si a futuro existen    
-
-                // Consultoría tributaria (2.5% del subtotal)
-                if (document.getElementById('consultoriaTributaria').checked) {
-                    totalCost += totalCost * 0.025;
-                }
-
-                // Actualizar el resumen de costos
-                document.getElementById('costSummary').innerHTML = `
-                    <p>Costo base del sistema: $${(selectedPanel.panel_price * quantity).toLocaleString()}</p>
-                    ${selectedInversor ? `<p>Inversor: $${selectedInversor.inversor_price.toLocaleString()}</p>` : ''}
-                    ${selectedTejaId ? `<p>Teja: $${tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva.toLocaleString()}</p>` : ''}
-                    <p>Material eléctrico: $${datos_externos.material_electrico.toLocaleString()}</p>
-                    <p>Certificación RETIE: $${datos_externos.certificacion_retie.toLocaleString()}</p>
-                    <p>Imprevistos (${datos_externos.imprevistos}%): $${imprevistosAmount.toLocaleString()}</p>
-                    <p>Viáticos: $${viaticosCost.toLocaleString()}</p>
-                    <p>Costos de transporte: $${travelCost.toLocaleString()}</p>
-                `;
-
-                document.getElementById('totalPrice').textContent = `$${totalCost.toLocaleString()}`;
-            }
-
             
 
             //añadir bd de medidores bidireccional
@@ -933,9 +924,6 @@
                 // Costo base del sistema (paneles + inversores)
                 const selectedPanel = paneles.find(p => p.id === parseInt(panelSelect.value));
                 const quantity = parseInt(panelQuantity.value) || 0;
-                console.log("precio panel y cantidad");
-                console.log(selectedPanel.panel_price)
-                console.log(quantity)
 
                 if (selectedPanel && quantity > 0) {
                     totalCost += selectedPanel.panel_price * quantity;
@@ -943,15 +931,22 @@
 
                 // Costos adicionales según selecciones
                 if (document.getElementById('protectorInversor').checked) {
-                    totalCost += 1868977; // Precio ejemplo
+                    const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
+                    totalCost += ( 1868977 * protectorQuantity); // Precio ejemplo
+                    console.log("cantidad:");
+                    console.log(protectorQuantity);
+                    console.log("final precio de protector:")
+                    console.log(1868977 * protectorQuantity);
                 }
 
                 if (document.getElementById('exportManager').checked) {
-                    totalCost += 415942; // Precio ejemplo
+                    const exportManagerQuantity = parseInt(document.getElementById('exportQuantity_input').value) || 0;
+                    totalCost += (415942 * exportManagerQuantity); // Precio ejemplo
                 }
 
                 if (document.getElementById('solisCT').checked) {
-                    totalCost += 288889; // Precio ejemplo
+                    const solisCTQuantity = parseInt(document.getElementById('solisCTQuantity_input').value) || 0;
+                    totalCost += (288889 * solisCTQuantity); // Precio ejemplo
                 }
 
                 if (document.getElementById('estudioConexion').checked) {
@@ -963,22 +958,24 @@
                 if (selectedTejaId) {
                     const selectedTeja = tejas.find(t => t.id === selectedTejaId);
                     if (selectedTeja) {
-                        totalCost += selectedTeja.precio_antes_de_iva;
+                        const tejasQuantity = parseInt(document.getElementById('tejasQuantity_input').value) || 0;
+                        totalCost += ( selectedTeja.precio_antes_de_iva * tejasQuantity );
                     }
                 }
 
                 // Agregar costo del medidor bidireccional si está seleccionado
                 if (document.getElementById('medidorBidireccional').checked) {
+                    const medidorBidireccionalQuantity = parseInt(document.getElementById('medidorBidireccionalQuantity_input').value) || 0;
                     const medidorSelect = document.getElementById('medidorBidireccionalSelect');
                     switch(medidorSelect.value) {
                         case 'medidor1':
-                            totalCost += 800000; // Precio ejemplo medidor monofásico
+                            totalCost += ( 800000 * medidorBidireccionalQuantity); // Precio ejemplo medidor monofásico
                             break;
                         case 'medidor2':
-                            totalCost += 1200000; // Precio ejemplo medidor bifásico
+                            totalCost += (1200000 * medidorBidireccionalQuantity); // Precio ejemplo medidor bifásico
                             break;
                         case 'medidor3':
-                            totalCost += 1500000; // Precio ejemplo medidor trifásico
+                            totalCost += ( 1500000 * medidorBidireccionalQuantity); // Precio ejemplo medidor trifásico
                             break;
                     }
                 }
@@ -993,16 +990,18 @@
                 // Agregar costo del inversor
                 const selectedInversor = inversores.find(inv => inv.id === parseInt(inversorSelect.value));
                 if (selectedInversor) {
-                    console.log("inversor price: ")
-                    console.log(selectedInversor.inversor_price)
-                    totalCost += selectedInversor.inversor_price;
+                    const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
+                    totalCost += (selectedInversor.inversor_price * inversorQuantity);
                 }
 
                 // Agregar costos externos
                 const imprevistosAmount = totalCost * (datos_externos.imprevistos / 100);
                 totalCost += imprevistosAmount;
                 totalCost += datos_externos.material_electrico;
-                totalCost += datos_externos.certificacion_retie;
+                certificacion_retie = ((datos_externos.certificacion_retie_v1 * Math.log((selectedPanel.power/1000)*quantity))-datos_externos.certificacion_retie_v2)/0.6
+                totalCost += Math.round(certificacion_retie);
+                console.log("Certificaion REtie:")
+                console.log(Math.round(certificacion_retie))
 
                 // Consultoría tributaria (2.5% del subtotal)
                 if (document.getElementById('consultoriaTributaria').checked) {
@@ -1016,10 +1015,10 @@
                 // Actualizar el resumen de costos
                 document.getElementById('costSummary').innerHTML = `
                     <p>Costo base del sistema: $${(selectedPanel.panel_price * quantity).toLocaleString()}</p>
-                    ${selectedInversor ? `<p>Inversor: $${selectedInversor.inversor_price.toLocaleString()}</p>` : ''}
-                    ${selectedTejaId ? `<p>Teja: $${tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva.toLocaleString()}</p>` : ''}
+                    ${selectedInversor ? `<p>Inversor: $${(selectedInversor.inversor_price*inversorQuantity).toLocaleString()}</p>` : ''}
+                    ${selectedTejaId ? `<p>Teja: $${(tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva*tejasQuantity).toLocaleString()}</p>` : ''}
                     <p>Material eléctrico: $${datos_externos.material_electrico.toLocaleString()}</p>
-                    <p>Certificación RETIE: $${datos_externos.certificacion_retie.toLocaleString()}</p>
+                    <p>Certificación RETIE: $${Math.round(certificacion_retie).toLocaleString()}</p>
                     <p>Imprevistos (${datos_externos.imprevistos}%): $${imprevistosAmount.toLocaleString()}</p>
                     <p>Viáticos y transporte: $${(calculateViaticosCosts() + calculateTravelCosts()).toLocaleString()}</p>
                 `;

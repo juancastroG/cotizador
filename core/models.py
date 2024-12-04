@@ -5,11 +5,20 @@ class DatosExternos(models.Model):
     security_factor = models.FloatField(help_text="Factor de seguridad")
     imprevistos = models.FloatField(help_text="Porcentaje para imprevistos")
     material_electrico = models.FloatField(help_text="Costo de material eléctrico")
-    certificacion_retie = models.FloatField(help_text="Costo de certificación RETIE")
+    certificacion_retie_v1 = models.FloatField(help_text="valor #1 para la operacion de certificación RETIE", default=0)
+    certificacion_retie_v2 = models.FloatField(help_text="valor #2 para la operacion de certificación RETIE", default=0)
+
 
     class Meta:
         verbose_name = "Datos Externos"
         verbose_name_plural = "Datos Externos"
+
+class Estudio_conexion(models.Model):
+    nombre = models.CharField(max_length=100)
+    precio = models.FloatField()
+
+    def __str__(self):
+        return self.nombre
 
 class TipoTeja(models.Model):
     nombre = models.CharField(max_length=100)
