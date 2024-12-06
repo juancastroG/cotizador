@@ -20,6 +20,9 @@
     <script id="datos_externos-data" type="application/json">
         {{ datos_externos|safe }}
     </script>
+    <script id="estudio_conexion-data" type="application/json">
+        {{ estudios_conexion|safe }}
+    </script>
     <!-- Logo -->
     <div class="absolute top-4 left-4">
         <img src="https://via.placeholder.com/150" alt="Logo" class="w-32">
@@ -179,7 +182,7 @@
                                         <i class="fas fa-question-circle"></i>
                                     </span>
                                 </label>
-                                <input type="number" id="panelQuantity" min="1" 
+                                <input type="number" id="panelQuantity" min="0" 
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
 
@@ -242,7 +245,7 @@
                                             <i class="fas fa-question-circle"></i>
                                         </span>
                                     </label>
-                                    <input type="number" id="inversorQuantity_input" min="1" 
+                                    <input type="number" id="inversorQuantity_input" min="0" value="1"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                                 <div id="inversorInfo" class="mt-2 text-sm text-gray-600"></div>
@@ -254,13 +257,13 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Días de trabajo</label>
-                                        <input type="number" id="workDays" min="1" max="30" value="2" 
+                                        <input type="number" id="workDays" min="0" max="30" value="2" 
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                         <p class="mt-1 text-sm text-gray-500">Mínimo 1 día</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Número de trabajadores</label>
-                                        <input type="number" id="workers" min="1" max="10" value="2" 
+                                        <input type="number" id="workers" min="0" max="10" value="2" 
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                         <p class="mt-1 text-sm text-gray-500">Mínimo 1 trabajador</p>
                                     </div>
@@ -301,7 +304,7 @@
                                             <i class="fas fa-question-circle"></i>
                                         </span>
                                     </label>
-                                    <input type="number" id="protectorQuantity_input" min="1" value="1"
+                                    <input type="number" id="protectorQuantity_input" min="0" value="0"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                             </div>
@@ -322,7 +325,7 @@
                                             <i class="fas fa-question-circle"></i>
                                         </span>
                                     </label>
-                                    <input type="number" id="exportQuantity_input" min="1" value="1"
+                                    <input type="number" id="exportQuantity_input" min="0" value="0"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                             </div>
@@ -343,7 +346,7 @@
                                             <i class="fas fa-question-circle"></i>
                                         </span>
                                     </label>
-                                    <input type="number" id="solisCTQuantity_input" min="1" value="1"
+                                    <input type="number" id="solisCTQuantity_input" min="0" value="0"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                             </div>
@@ -355,8 +358,7 @@
                                     <span class="text-sm font-medium text-gray-700">¿Incluir estudio de conexión?</span>
                                 </label>
                                 <select id="estudioConexionSelect" class="w-full rounded-md border-gray-300 hidden">
-                                    <option value="estudio1">Estudio Básico</option>
-                                    <option value="estudio2">Estudio Avanzado</option>
+                                    <option value="">Seleccione el tipo de estudio</option>
                                 </select>
                             </div>
 
@@ -384,7 +386,7 @@
                                             <i class="fas fa-question-circle"></i>
                                         </span>
                                     </label>
-                                    <input type="number" id="medidorBidireccionalQuantity_input" min="1" value="1"
+                                    <input type="number" id="medidorBidireccionalQuantity_input" min="0" value="0"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                             </div>
@@ -408,7 +410,7 @@
                                             <i class="fas fa-question-circle"></i>
                                         </span>
                                     </label>
-                                    <input type="number" id="tejasQuantity_input" min="1" value="1"
+                                    <input type="number" id="tejasQuantity_input" min="0" value="0"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                                 
@@ -715,6 +717,20 @@
                 }
                 calculateTotalCost();
             });
+
+            // cargar datos de estudio de conexión
+            const estudios_conexion = JSON.parse(document.getElementById('estudio_conexion-data').textContent);
+            const estudioConexionSelect = document.getElementById('estudioConexionSelect');
+
+            // Poblar el selector de estudio de conexión
+            estudios_conexion.forEach(estudio_conexion => {
+                const option = document.createElement('option');
+                option.value = estudio_conexion.id;
+                option.textContent =  estudio_conexion.nombre;
+                estudioConexionSelect.appendChild(option);
+            });
+
+
             // Poblar el selector de paneles
             paneles.forEach(panel => {
                 const option = document.createElement('option');
@@ -831,8 +847,13 @@
                 const quantity_check = document.getElementById(checkbox.id + 'Quantity');
                 if (select) {
                     checkbox.addEventListener('change', () => {
-                        quantity_check.classList.toggle('hidden', !checkbox.checked);
                         select.classList.toggle('hidden', !checkbox.checked);
+                        calculateTotalCost();
+                    });
+                }
+                if (quantity_check) {
+                    checkbox.addEventListener('change', () => {
+                        quantity_check.classList.toggle('hidden', !checkbox.checked);
                         calculateTotalCost();
                     });
                 }
@@ -920,37 +941,51 @@
             // Modificar la función calculateTotalCost existente
             function calculateTotalCost() {
                 let totalCost = 0;
+                let totalCostSinIva = 0;
 
                 // Costo base del sistema (paneles + inversores)
                 const selectedPanel = paneles.find(p => p.id === parseInt(panelSelect.value));
                 const quantity = parseInt(panelQuantity.value) || 0;
 
                 if (selectedPanel && quantity > 0) {
-                    totalCost += selectedPanel.panel_price * quantity;
+                    totalCost += (selectedPanel.panel_price * quantity) + (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity);
+                    console.log("panel: ",(selectedPanel.panel_price * quantity) + (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity))
+                    totalCostSinIva += (selectedPanel.panel_price * quantity) + (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity);
                 }
+                
 
                 // Costos adicionales según selecciones
                 if (document.getElementById('protectorInversor').checked) {
                     const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
-                    totalCost += ( 1868977 * protectorQuantity); // Precio ejemplo
-                    console.log("cantidad:");
-                    console.log(protectorQuantity);
-                    console.log("final precio de protector:")
-                    console.log(1868977 * protectorQuantity);
+                    totalCost += ( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + (datos_externos.pct_iva * (( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity))); // Precio ejemplo
+                    console.log("protector: ",( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + (datos_externos.pct_iva * (( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity))));
+                    totalCostSinIva += ( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) 
                 }
 
                 if (document.getElementById('exportManager').checked) {
                     const exportManagerQuantity = parseInt(document.getElementById('exportQuantity_input').value) || 0;
-                    totalCost += (415942 * exportManagerQuantity); // Precio ejemplo
+                    console.log("export_manager: ",(415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity))))
+                    totalCost += (415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity))); // Precio ejemplo
+                    totalCostSinIva += (415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity)
                 }
 
                 if (document.getElementById('solisCT').checked) {
                     const solisCTQuantity = parseInt(document.getElementById('solisCTQuantity_input').value) || 0;
-                    totalCost += (288889 * solisCTQuantity); // Precio ejemplo
+                    console.log("SolisCT: ",(288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + (datos_externos.pct_iva * ((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity))))
+                    totalCost += (288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + (datos_externos.pct_iva * ((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity))); // Precio ejemplo
+                    totalCostSinIva += (288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity)
                 }
 
+                const selectedEstudioConexionId = parseInt(estudioConexionSelect.value);
                 if (document.getElementById('estudioConexion').checked) {
-                    totalCost += 288889; // Precio ejemplo pero tendra que venir desde la base de datos
+                    if (selectedEstudioConexionId){
+                        const selectedEstudioConexión = estudios_conexion.find(t => t.id === selectedEstudioConexionId);
+                        if (selectedEstudioConexión){
+                            totalCost += selectedEstudioConexión.precio + (datos_externos.pct_iva * selectedEstudioConexión.precio);
+                            console.log("Estudio_conexion: ",selectedEstudioConexión.precio + (datos_externos.pct_iva * selectedEstudioConexión.precio))
+                            totalCostSinIva += selectedEstudioConexión.precio
+                        }
+                    }
                 }
 
                 const selectedTejaId = parseInt(tipoTejaSelect.value);
@@ -959,30 +994,33 @@
                     const selectedTeja = tejas.find(t => t.id === selectedTejaId);
                     if (selectedTeja) {
                         const tejasQuantity = parseInt(document.getElementById('tejasQuantity_input').value) || 0;
-                        totalCost += ( selectedTeja.precio_antes_de_iva * tejasQuantity );
+                        console.log("Tejas: ",(selectedTeja.precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * selectedTeja.precio_antes_de_iva * tejasQuantity) + (datos_externos.pct_iva * ((selectedTeja.precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * selectedTeja.precio_antes_de_iva * tejasQuantity))))
+                        totalCost += (selectedTeja.precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * selectedTeja.precio_antes_de_iva * tejasQuantity) + (datos_externos.pct_iva * ((selectedTeja.precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * selectedTeja.precio_antes_de_iva * tejasQuantity)));
+                        totalCostSinIva += (selectedTeja.precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * selectedTeja.precio_antes_de_iva * tejasQuantity) 
+                    
                     }
                 }
-
                 // Agregar costo del medidor bidireccional si está seleccionado
                 if (document.getElementById('medidorBidireccional').checked) {
                     const medidorBidireccionalQuantity = parseInt(document.getElementById('medidorBidireccionalQuantity_input').value) || 0;
                     const medidorSelect = document.getElementById('medidorBidireccionalSelect');
                     switch(medidorSelect.value) {
                         case 'medidor1':
-                            totalCost += ( 800000 * medidorBidireccionalQuantity); // Precio ejemplo medidor monofásico
+                            totalCost += ( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity))); // Precio ejemplo medidor monofásico
+                            console.log("medidor bidereccional: ",( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity))))
+                            
+                            totalCostSinIva += ( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)
                             break;
                         case 'medidor2':
-                            totalCost += (1200000 * medidorBidireccionalQuantity); // Precio ejemplo medidor bifásico
+                            totalCost += (1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity))); // Precio ejemplo medidor bifásico
+                            totalCostSinIva += ( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)
                             break;
                         case 'medidor3':
-                            totalCost += ( 1500000 * medidorBidireccionalQuantity); // Precio ejemplo medidor trifásico
+                            totalCost += ( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity))); // Precio ejemplo medidor trifásico
+                            totalCostSinIva += ( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)
                             break;
                     }
                 }
-
-                // Calcular costos de viáticos
-                const viaticosCost = calculateViaticosCosts();
-                const travelCost = calculateTravelCosts();
 
                 //Agregar mas costos si a futuro existen    
 
@@ -991,42 +1029,67 @@
                 const selectedInversor = inversores.find(inv => inv.id === parseInt(inversorSelect.value));
                 if (selectedInversor) {
                     const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
-                    totalCost += (selectedInversor.inversor_price * inversorQuantity);
+                    console.log("Inversor: ",(selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price))
+                    totalCost += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price);
+                    totalCostSinIva += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price);
                 }
 
                 // Agregar costos externos
-                const imprevistosAmount = totalCost * (datos_externos.imprevistos / 100);
-                totalCost += imprevistosAmount;
-                totalCost += datos_externos.material_electrico;
-                certificacion_retie = ((datos_externos.certificacion_retie_v1 * Math.log((selectedPanel.power/1000)*quantity))-datos_externos.certificacion_retie_v2)/0.6
-                totalCost += Math.round(certificacion_retie);
-                console.log("Certificaion REtie:")
-                console.log(Math.round(certificacion_retie))
-
+                let consultoriaCost = 0
+                totalCost += datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)));
+                console.log("MAterial electrico: ",datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico))))
+                
+                totalCostSinIva += datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)
+                certificacion_retie = (((datos_externos.certificacion_retie_v1 * Math.log((selectedPanel.power/1000)*quantity))-datos_externos.certificacion_retie_v2)/0.6 );
+                console.log("Certifiación: ",(Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * ((Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie))))
+                totalCost += (Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * ((Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie)));
+                totalCostSinIva += (Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie)
                 // Consultoría tributaria (2.5% del subtotal)
                 if (document.getElementById('consultoriaTributaria').checked) {
-                    totalCost += totalCost * 0.025;
-                }
+                    totalCost += (totalCostSinIva * datos_externos.consultoria_tributaria) + (datos_externos.pct_iva * totalCostSinIva * datos_externos.consultoria_tributaria);
+                    console.log("CONSULTORIA TRIBU: ",(totalCostSinIva * datos_externos.consultoria_tributaria) + (datos_externos.pct_iva * totalCostSinIva * datos_externos.consultoria_tributaria))
+                    consultoriaCost = (totalCostSinIva * datos_externos.consultoria_tributaria) + (datos_externos.pct_iva * totalCostSinIva * datos_externos.consultoria_tributaria);
+                    totalCostSinIva += (totalCostSinIva * datos_externos.consultoria_tributaria);
+                }   
+
                 // Agregar costos de viaje y viáticos
                 totalCost += calculateTravelCosts();
+                totalCostSinIva += calculateTravelCosts();
                 totalCost += calculateViaticosCosts();
+                totalCostSinIva += calculateViaticosCosts();
+                const imprevistosAmount = totalCostSinIva * (datos_externos.imprevistos / 100);
+                totalCost += imprevistosAmount;
+                totalCostSinIva += totalCostSinIva * (datos_externos.imprevistos / 100);
+
+                const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
+                const tejasQuantity = parseInt(document.getElementById('tejasQuantity_input').value) || 0;
+                const selectedEstudioConexión = estudios_conexion.find(t => t.id === selectedEstudioConexionId);
+                const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
+                const solisCTQuantity = parseInt(document.getElementById('solisCTQuantity_input').value) || 0;
+                const exportManagerQuantity = parseInt(document.getElementById('exportQuantity_input').value) || 0;
+                const medidorBidireccionalQuantity = parseInt(document.getElementById('medidorBidireccionalQuantity_input').value) || 0;
 
 
                 // Actualizar el resumen de costos
                 document.getElementById('costSummary').innerHTML = `
-                    <p>Costo base del sistema: $${(selectedPanel.panel_price * quantity).toLocaleString()}</p>
-                    ${selectedInversor ? `<p>Inversor: $${(selectedInversor.inversor_price*inversorQuantity).toLocaleString()}</p>` : ''}
-                    ${selectedTejaId ? `<p>Teja: $${(tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva*tejasQuantity).toLocaleString()}</p>` : ''}
-                    <p>Material eléctrico: $${datos_externos.material_electrico.toLocaleString()}</p>
-                    <p>Certificación RETIE: $${Math.round(certificacion_retie).toLocaleString()}</p>
-                    <p>Imprevistos (${datos_externos.imprevistos}%): $${imprevistosAmount.toLocaleString()}</p>
+                    <p>Costo panel(es): $${(selectedPanel.panel_price * quantity + (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity)).toLocaleString()}</p>
+                    ${selectedInversor ? `<p>Costo inversor (es): $${((selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price)).toLocaleString()}</p>` : ''}
+                    <p>Costo ExportManager: $${((415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity)))).toLocaleString()}</p>
+                    <p>Costo de CTSolis: $${((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + (datos_externos.pct_iva * ((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity)))).toLocaleString()}</p>
+                    <p>Costo de protector(es) inversor(es): $${(( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + (datos_externos.pct_iva * (( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity)))).toLocaleString()}</p>
+                    ${selectedTejaId ? `<p>Teja: $${((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + (datos_externos.pct_iva * ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity)))).toLocaleString()}</p>` : ''}
+                    <p>Material eléctrico: $${(datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)))).toLocaleString()}</p>
+                    <p>Certificación RETIE: $${(Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * (Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie)))).toLocaleString()}</p>
+                    ${selectedEstudioConexionId ? `<p>Estudio de conexión: $${(estudios_conexion.find(t => t.id === selectedEstudioConexionId).precio + (datos_externos.pct_iva * selectedEstudioConexión.precio)).toLocaleString()}</p>`:''} 
+                    <p>Costo medidor bidireccional: $${(( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))).toLocaleString()}</p>
+                    <p>Asesoría y Consultoría especializada (2.5%): $${consultoriaCost.toLocaleString()}
                     <p>Viáticos y transporte: $${(calculateViaticosCosts() + calculateTravelCosts()).toLocaleString()}</p>
+                    <p>Imprevistos (${datos_externos.imprevistos}%): $${imprevistosAmount.toLocaleString()}</p>
+                    <br>
+                    <h3>Subtotal sin IVA: $${totalCostSinIva.toLocaleString()}</h3>
                 `;
-
                 document.getElementById('totalPrice').textContent = `$${totalCost.toLocaleString()}`;
             }
-
-
         });
     </script>
 </body>

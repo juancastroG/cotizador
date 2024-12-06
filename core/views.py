@@ -35,7 +35,10 @@ def home(request):
         'imprevistos': imprevistos,
         'material_electrico': material_electrico,
         'certificacion_retie_v1': certificacion_retie_v1,
-        'certificacion_retie_v2': certificacion_retie_v2
+        'certificacion_retie_v2': certificacion_retie_v2,
+        'pct_iva': datos_externos.pct_iva if datos_externos else 0,
+        'pct_instalacion': datos_externos.pct_instalacion if datos_externos else 0,
+        'consultoria_tributaria': datos_externos.consultoria_tributaria if datos_externos else 0
     }
 
     # Obtener datos de tejas de la base de datos
@@ -73,7 +76,7 @@ def home(request):
     datos_externos_data = json.dumps(datos_externos_dict)
     estudio_conexion_data = json.dumps(estudio_conexion_data)
 
-    return render(request, 'core/home.html', {'paneles': paneles_data, 'inversores': inversores_data, 'tejas': tejas_data, 'datos_externos': datos_externos_data, 'estudios_de_conexion': estudio_conexion_data})
+    return render(request, 'core/home.html', {'paneles': paneles_data, 'inversores': inversores_data, 'tejas': tejas_data, 'datos_externos': datos_externos_data, 'estudios_conexion': estudio_conexion_data})
 
 
 def get_viaticos(request):

@@ -7,7 +7,9 @@ class DatosExternos(models.Model):
     material_electrico = models.FloatField(help_text="Costo de material eléctrico")
     certificacion_retie_v1 = models.FloatField(help_text="valor #1 para la operacion de certificación RETIE", default=0)
     certificacion_retie_v2 = models.FloatField(help_text="valor #2 para la operacion de certificación RETIE", default=0)
-
+    pct_iva = models.FloatField(help_text="Porcentaje de IVA", default=0.19)
+    pct_instalacion = models.FloatField(help_text="Porcentaje de instalación", default=0.10)
+    consultoria_tributaria = models.FloatField(help_text="Porcentaje de consultoria tributaria", default=0.025)
 
     class Meta:
         verbose_name = "Datos Externos"
