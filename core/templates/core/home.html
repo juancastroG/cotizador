@@ -458,11 +458,11 @@
         </div>
     </div>
 
-    <!-- Bottom image -->
+    <!-- Bottom image 
     <div class="fixed bottom-0 w-full">
         <img src="https://via.placeholder.com/1920x200" alt="Footer Image" class="w-full h-32 object-cover">
     </div>
-
+-->
     <script>
 
         let locations = [];
@@ -624,11 +624,15 @@
                 // Recoger todos los datos
                 const formData = {
                     fullName: document.getElementById('fullName').value,
-                    email: document.getElementById('email').value,
-                    companyName: document.getElementById('companyName').value,
-                    businessType: document.getElementById('businessType').value,
-                    budget: document.getElementById('budget').value,
-                    projectDescription: document.getElementById('projectDescription').value
+                    consumption: document.getElementById('consumption').value,
+                    costPerKwh: document.getElementById('costPerKwh').value,
+                    costSummary: document.getElementById('costSummary').textContent,
+                    totalCost: document.getElementById('totalPrice').textContent,
+                    contribution: document.getElementById('contribution').value,
+                    totalBill: document.getElementById('totalBill').value,
+                    transformer: document.getElementById('transformer').value,
+                    availableArea: document.getElementById('availableArea').value
+
                 };
 
                 try {
