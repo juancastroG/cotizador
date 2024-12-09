@@ -358,7 +358,7 @@
                             </div>
 
                             <!-- Estudio de conexión -->
-                            <div class="space-y-2">
+                            <div class="space-y-2 hidden">
                                 <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="estudioConexion" class="rounded text-blue-500">
                                     <span class="text-sm font-medium text-gray-700">¿Incluir estudio de conexión?</span>
@@ -599,13 +599,15 @@
             return inverterQuantity; // Un protector por inversor
         }
 
-        // Función para validar requerimiento de estudio de conexión
-        function validateConnectionStudy(totalInverterPower, transformerCapacity) {
-            return totalInverterPower > (transformerCapacity * 0.5);
-        }*/
+        */
         // Función para validar requerimiento de protección CNO
         function validateCNOProtection(totalInverterPower) {
             return totalInverterPower > 250;
+        }
+
+        // Función para validar requerimiento de estudio de conexión
+        function validateConnectionStudy(totalInverterPower, transformerCapacity) {
+            return totalInverterPower > (transformerCapacity * 0.5);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -759,6 +761,7 @@
             const tipoTejaSelect = document.getElementById('tipoTeja');
             const tejaImage = document.getElementById('tejaImage');
             const tejaPrecio = document.getElementById('tejaPrecio');
+
             /*
             //logica para los paneles
             panelQuantity.addEventListener('input', function() {
@@ -820,6 +823,9 @@
             tipoTejaSelect.addEventListener('change', function() {
                 const selectedTeja = tejas.find(t => t.id === parseInt(this.value));
                 if (selectedTeja) {
+                    console.log("URL DE LA TEJA", selectedTeja.imagen);
+                    console.log("Teja seleccionada: ",selectedTeja.id);
+                    console.log("PRECIO TEJA: ",selectedTeja.precio_antes_de_iva.toLocaleString());
                     tejaImage.src = selectedTeja.imagen;
                     tejaImage.classList.remove('hidden');
                     tejaPrecio.textContent = `Precio: $${selectedTeja.precio_antes_de_iva.toLocaleString()}`;
@@ -1054,7 +1060,8 @@
                     totalCostSinIva += (selectedPanel.panel_price * quantity) + (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity);
                 }
                 
-
+                let estudio_precio = 0
+                let estudioavailable = false
                 // Agregar costo del inversor
                 const selectedInversor = inversores.find(inv => inv.id === parseInt(inversorSelect.value));
                 const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
@@ -1066,13 +1073,34 @@
                     totalCostSinIva += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity);
                     // Agregar proteccion CNO
                     const totalInverterPower = selectedInversor ? selectedInversor.power * inversorQuantity : 0;
-                        if (validateCNOProtection(totalInverterPower)) {
-                            const proteccionCNOCost = datos_externos.proteccionCNO;
-                            totalCost += proteccionCNOCost;
-                            totalCostSinIva += proteccionCNOCost;
-                            console.log("Costo protecion CNO: ",proteccionCNOCost);
-                            selectedProteccionCNO = true;
+                    if (validateCNOProtection(totalInverterPower)) {
+                        const proteccionCNOCost = datos_externos.proteccionCNO;
+                        totalCost += proteccionCNOCost;
+                        totalCostSinIva += proteccionCNOCost;
+                        console.log("Costo protecion CNO: ",proteccionCNOCost);
+                        selectedProteccionCNO = true;
+                    }
+
+                    // Validación estudio de conexión
+                    const transformerCapacity = document.getElementById('transformer').value;
+                    const estudiosConexion = JSON.parse(document.getElementById('estudio_conexion-data').textContent);
+
+                    
+                    if (validateConnectionStudy(totalInverterPower, transformerCapacity)){
+                        const selectedEstudioConexión = estudiosConexion.find(estudio => 
+                            totalInverterPower >= estudio.desde && 
+                            totalInverterPower <= estudio.hasta
+                        );
+
+                        if (!selectedEstudioConexión) {
+                            console.log("No se encontró un estudio de conexión apropiado");
                         }
+                        estudio_precio = selectedEstudioConexión.precio;
+                        estudioavailable = true;
+                        totalCost += estudio_precio + (datos_externos.pct_iva * estudio_precio);
+                        console.log("Estudio_conexion: ",estudio_precio + (datos_externos.pct_iva * estudio_precio));
+                        totalCostSinIva += estudio_precio;
+                    };
                 }
 
                 // Costos adicionales según selecciones
@@ -1098,18 +1126,7 @@
                     totalCost += (288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + (datos_externos.pct_iva * ((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity))); // Precio ejemplo
                     totalCostSinIva += (288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity)
                 }
-
-                const selectedEstudioConexionId = parseInt(estudioConexionSelect.value);
-                if (document.getElementById('estudioConexion').checked) {
-                    if (selectedEstudioConexionId){
-                        const selectedEstudioConexión = estudios_conexion.find(t => t.id === selectedEstudioConexionId);
-                        if (selectedEstudioConexión){
-                            totalCost += selectedEstudioConexión.precio + (datos_externos.pct_iva * selectedEstudioConexión.precio);
-                            console.log("Estudio_conexion: ",selectedEstudioConexión.precio + (datos_externos.pct_iva * selectedEstudioConexión.precio))
-                            totalCostSinIva += selectedEstudioConexión.precio
-                        }
-                    }
-                }
+                //teja
 
                 const selectedTejaId = parseInt(tipoTejaSelect.value);
 
@@ -1179,7 +1196,7 @@
                 totalCostSinIva += totalCostSinIva * (datos_externos.imprevistos / 100);
 
                 const tejasQuantity = parseInt(document.getElementById('tejasQuantity_input').value) || 0;
-                const selectedEstudioConexión = estudios_conexion.find(t => t.id === selectedEstudioConexionId);
+                //const selectedEstudioConexión = estudios_conexion.find(t => t.id === selectedEstudioConexionId);
                 //const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
                 const protectorQuantity = inversorQuantity;
                 //const solisCTQuantity = parseInt(document.getElementById('solisCTQuantity_input').value) || 0;
@@ -1199,7 +1216,7 @@
                     ${selectedTejaId ? `<p>Teja: $${((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + (datos_externos.pct_iva * ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity)))).toLocaleString()}</p>` : ''}
                     <p>Material eléctrico: $${(datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)))).toLocaleString()}</p>
                     <p>Certificación RETIE: $${(Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * (Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie)))).toLocaleString()}</p>
-                    ${selectedEstudioConexionId ? `<p>Estudio de conexión: $${(estudios_conexion.find(t => t.id === selectedEstudioConexionId).precio + (datos_externos.pct_iva * selectedEstudioConexión.precio)).toLocaleString()}</p>`:''} 
+                    ${estudioavailable ? `<p>Estudio de conexión: $${estudio_precio.toLocaleString()}</p>`:''} 
                     <p>Costo medidor bidireccional: $${(( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))).toLocaleString()} (Este valor puede varior dependiendo del operador de red)</p>
                     ${selectedProteccionCNO ? `<p>Costo Protección CNO: $${datos_externos.proteccionCNO.toLocaleString()}</p>`:''}
                     <p>Asesoría y Consultoría especializada (2.5%): $${consultoriaCost.toLocaleString()}

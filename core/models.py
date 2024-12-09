@@ -18,6 +18,8 @@ class DatosExternos(models.Model):
 
 class Estudio_conexion(models.Model):
     nombre = models.CharField(max_length=100)
+    since = models.FloatField(help_text="Desde", default=0)
+    until = models.FloatField(help_text="Hasta", default=0)
     precio = models.FloatField()
 
     def __str__(self):

@@ -105,7 +105,7 @@ def get_estudio_conexion():
     try:
          # Obtener datos de estudio de conexión de la base de datos
         estudio_conexion = Estudio_conexion.objects.all()
-        estudio_conexion_data = [{'id': ec.id, 'nombre': ec.nombre, 'precio': float(ec.precio)}
+        estudio_conexion_data = [{'id': ec.id, 'nombre': ec.nombre, 'precio': float(ec.precio), 'desde': float(ec.since), 'hasta': float(ec.until)}
                      for ec in estudio_conexion]
         return estudio_conexion_data
     
@@ -115,7 +115,9 @@ def get_estudio_conexion():
             'error': str(e),
             'id': 0,
             'nombre': "No hay datos disponibles",
-            'precio': 0
+            'precio': 0,
+            'desde': 0,
+            'hasta': 0
         }, status=500)
 
 def get_locations(request):
@@ -127,7 +129,7 @@ def get_locations(request):
 def get_tejas():
     try:
         tejas = TipoTeja.objects.all()
-        tejas_data = [{'id': teja.id, 'nombre': teja.nombre, 'precio_antes_de_iva': float(teja.precio_antes_de_iva)}
+        tejas_data = [{'id': teja.id, 'nombre': teja.nombre, 'precio_antes_de_iva': float(teja.precio_antes_de_iva), 'imagen': teja.imagen.url}
                       for teja in tejas]
         return tejas_data
     
@@ -137,7 +139,8 @@ def get_tejas():
             'error': str(e),
             'id': 0,
             'nombre': "No hay datos disponibles",
-            'precio_antes_de_iva': 0
+            'precio_antes_de_iva': 0,
+            'imagen': "No hay datos disponibles"
         }, status=500)
 
 
