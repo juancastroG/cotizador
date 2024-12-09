@@ -288,7 +288,7 @@
                             </div>
 
                             <!-- Protector de inversores -->
-                            <div class="space-y-2">
+                            <div class="space-y-2 hidden">
                                 <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="protectorInversor" class="rounded text-blue-500">
                                     <span class="text-sm font-medium text-gray-700">¿Incluir protector de inversores?</span>
@@ -337,7 +337,7 @@
                             </div>
 
                             <!-- Solis CT -->
-                            <div class="space-y-2">
+                            <div class="space-y-2 hidden">
                                 <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="solisCT" class="rounded text-blue-500">
                                     <span class="text-sm font-medium text-gray-700">¿Incluir Solis CT?</span>
@@ -1055,23 +1055,45 @@
                 }
                 
 
+                // Agregar costo del inversor
+                const selectedInversor = inversores.find(inv => inv.id === parseInt(inversorSelect.value));
+                const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
+                const selectedProteccionCNO = false
+                if (selectedInversor) {
+                    const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
+                    console.log("Inversor: ",(selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity))
+                    totalCost += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity);
+                    totalCostSinIva += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity);
+                    // Agregar proteccion CNO
+                    const totalInverterPower = selectedInversor ? selectedInversor.power * inversorQuantity : 0;
+                        if (validateCNOProtection(totalInverterPower)) {
+                            const proteccionCNOCost = datos_externos.proteccionCNO;
+                            totalCost += proteccionCNOCost;
+                            totalCostSinIva += proteccionCNOCost;
+                            console.log("Costo protecion CNO: ",proteccionCNOCost);
+                            selectedProteccionCNO = true;
+                        }
+                }
+
                 // Costos adicionales según selecciones
-                if (document.getElementById('protectorInversor').checked) {
-                    const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
+                if (inversorQuantity > 0) {
+                    //const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
+                    const protectorQuantity = inversorQuantity;
                     totalCost += ( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + (datos_externos.pct_iva * (( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity))); // Precio ejemplo
                     console.log("protector: ",( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + (datos_externos.pct_iva * (( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity))));
                     totalCostSinIva += ( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) 
                 }
-
+                const exportManagerQuantity = parseInt(document.getElementById('exportQuantity_input').value) || 0;
                 if (document.getElementById('exportManager').checked) {
-                    const exportManagerQuantity = parseInt(document.getElementById('exportQuantity_input').value) || 0;
+                    //const exportManagerQuantity = parseInt(document.getElementById('exportQuantity_input').value) || 0;
                     console.log("export_manager: ",(415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity))))
                     totalCost += (415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity))); // Precio ejemplo
                     totalCostSinIva += (415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity)
                 }
 
-                if (document.getElementById('solisCT').checked) {
-                    const solisCTQuantity = parseInt(document.getElementById('solisCTQuantity_input').value) || 0;
+                if (exportManagerQuantity > 0) {
+                    //const solisCTQuantity = parseInt(document.getElementById('solisCTQuantity_input').value) || 0;
+                    const solisCTQuantity = exportManagerQuantity;
                     console.log("SolisCT: ",(288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + (datos_externos.pct_iva * ((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity))))
                     totalCost += (288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + (datos_externos.pct_iva * ((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity))); // Precio ejemplo
                     totalCostSinIva += (288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity)
@@ -1125,32 +1147,10 @@
 
                 //Agregar mas costos si a futuro existen    
 
-
-                // Agregar costo del inversor
-                const selectedInversor = inversores.find(inv => inv.id === parseInt(inversorSelect.value));
-                const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
-                const selectedProteccionCNO = false
-                if (selectedInversor) {
-                    const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
-                    console.log("Inversor: ",(selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity))
-                    totalCost += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity);
-                    totalCostSinIva += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity);
-                    // Agregar proteccion CNO
-                    const totalInverterPower = selectedInversor ? selectedInversor.power * inversorQuantity : 0;
-                        if (validateCNOProtection(totalInverterPower)) {
-                            const proteccionCNOCost = datos_externos.proteccionCNO;
-                            totalCost += proteccionCNOCost;
-                            totalCostSinIva += proteccionCNOCost;
-                            console.log("Costo protecion CNO: ",proteccionCNOCost);
-                            selectedProteccionCNO = true;
-                        }
-                }
-
                 // Agregar costos externos
                 let consultoriaCost = 0
                 totalCost += datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)));
                 console.log("MAterial electrico: ",datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico))))
-                
 
 
                 totalCostSinIva += datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)
@@ -1180,9 +1180,12 @@
 
                 const tejasQuantity = parseInt(document.getElementById('tejasQuantity_input').value) || 0;
                 const selectedEstudioConexión = estudios_conexion.find(t => t.id === selectedEstudioConexionId);
-                const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
-                const solisCTQuantity = parseInt(document.getElementById('solisCTQuantity_input').value) || 0;
-                const exportManagerQuantity = parseInt(document.getElementById('exportQuantity_input').value) || 0;
+                //const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
+                const protectorQuantity = inversorQuantity;
+                //const solisCTQuantity = parseInt(document.getElementById('solisCTQuantity_input').value) || 0;
+                const solisCTQuantity = exportManagerQuantity;
+                
+                //const exportManagerQuantity = parseInt(document.getElementById('exportQuantity_input').value) || 0;
                 const medidorBidireccionalQuantity = parseInt(document.getElementById('medidorBidireccionalQuantity_input').value) || 0;
 
 
