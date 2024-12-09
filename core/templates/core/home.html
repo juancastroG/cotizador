@@ -308,8 +308,14 @@
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                             </div>
-
                             <!-- Export Manager -->
+                            <div class="mb-4">
+                                <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" 
+                                   class="text-blue-500 hover:text-blue-700 flex items-center">
+                                    <i class="fas fa-play-circle mr-2"></i>
+                                    Ver video explicativo sobre Export Manager
+                                </a>
+                            </div>
                             <div class="space-y-2">
                                 <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="exportManager" class="rounded text-blue-500">
@@ -421,6 +427,13 @@
                             </div>
 
                             <!-- Consultoría Tributaria -->
+                            <div class="mb-4">
+                                <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank"
+                                   class="text-blue-500 hover:text-blue-700 flex items-center">
+                                    <i class="fas fa-play-circle mr-2"></i>
+                                    Aprende sobre los beneficios tributarios
+                                </a>
+                            </div>
                             <div class="space-y-2">
                                 <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="consultoriaTributaria" class="rounded text-blue-500">
@@ -497,6 +510,10 @@
         }
 
         function calculateTravelCosts() {
+            if (locationSelect.value === "Medellin"){
+                //console.log("NO HUBO COBRO Travel")
+                return 0;
+            }
             let distance = 0;
             try {
                 if (locationSelect.value === 'custom') {
@@ -510,6 +527,8 @@
             } catch (error) {
                 return 0;
             }
+            //console.log("SI HUBO COBRO travel: ", distance*2*2300);
+
             return distance * 2 * 2300;
         }
 
@@ -534,6 +553,10 @@
 
         // Función para calcular viáticos
         function calculateViaticosCosts() {
+            if (calculateTravelCosts() === 0){
+                //console.log("No hay cobro Viaticos....");
+                return 0;
+            }
             if (!viaticos) {
                 console.warn('Datos de viáticos no disponibles');
                 return 0;
@@ -544,8 +567,45 @@
             
             const costoHospedaje = viaticos.precio_hospedaje * workDays * workers;
             const costoViaticos = viaticos.precio_viaticos * workDays * workers;
-            
+            //console.log("SI HUBO COBRO: Viaticos", costoHospedaje + costoViaticos);
             return costoHospedaje + costoViaticos;
+        }
+        /*
+        // Función para seleccionar el inversor apropiado
+        function selectAppropriateInverter(totalPanelPower, inversores) {
+            // Filtrar inversores con inventario disponible
+            const availableInversores = inversores.filter(inv => inv.sales_count > 0);
+            
+            // Ordenar inversores por potencia
+            const sortedInversores = availableInversores.sort((a, b) => a.power - b.power);
+            
+            // Encontrar el inversor más cercano que cumpla con el criterio del 150%
+            const appropriateInverter = sortedInversores.find(inv => 
+                totalPanelPower <= inv.power * 1.5
+            );
+            
+            return appropriateInverter || null;
+        }
+
+        // Función para validar disponibilidad de paneles
+        function validatePanelAvailability(selectedPanel, requestedQuantity) {
+            //Valida si hay inventario disponible
+            //return selectedPanel.sales_count >= requestedQuantity;
+            return true;
+        }
+
+        // Función para calcular cantidad de protectores necesarios
+        function calculateProtectorsNeeded(inverterQuantity) {
+            return inverterQuantity; // Un protector por inversor
+        }
+
+        // Función para validar requerimiento de estudio de conexión
+        function validateConnectionStudy(totalInverterPower, transformerCapacity) {
+            return totalInverterPower > (transformerCapacity * 0.5);
+        }*/
+        // Función para validar requerimiento de protección CNO
+        function validateCNOProtection(totalInverterPower) {
+            return totalInverterPower > 250;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -699,6 +759,54 @@
             const tipoTejaSelect = document.getElementById('tipoTeja');
             const tejaImage = document.getElementById('tejaImage');
             const tejaPrecio = document.getElementById('tejaPrecio');
+            /*
+            //logica para los paneles
+            panelQuantity.addEventListener('input', function() {
+                const quantity = parseInt(this.value) || 0;
+                const selectedPanel = paneles.find(p => p.id === parseInt(panelSelect.value));
+                
+                if (selectedPanel) {
+                    if (!validatePanelAvailability(selectedPanel, quantity)) {
+                        alert(`Solo hay ${selectedPanel.sales_count} paneles disponibles en inventario`);
+                        this.value = selectedPanel.sales_count;
+                        return;
+                    }
+                    
+                    const totalPower = selectedPanel.power * quantity;
+                    const appropriateInverter = selectAppropriateInverter(totalPower, inversores);
+                    
+                    if (appropriateInverter) {
+                        inversorSelect.value = appropriateInverter.id;
+                        // Actualizar cantidad de protectores necesarios
+                        const protectorsNeeded = calculateProtectorsNeeded(1); // Asumiendo 1 inversor inicialmente
+                        document.getElementById('protectorQuantity_input').value = protectorsNeeded;
+                    }
+                }
+                calculateTotalCost();
+            });
+
+            // Para la validación de estudio de conexión
+            document.getElementById('transformer').addEventListener('input', function() {
+                const transformerCapacity = parseFloat(this.value) || 0;
+                const totalInverterPower = selectedInversor ? selectedInversor.power * inversorQuantity : 0;
+                
+                const needsStudy = validateConnectionStudy(totalInverterPower, transformerCapacity);
+                document.getElementById('estudioConexion').disabled = !needsStudy;
+                if (!needsStudy) {
+                    document.getElementById('estudioConexion').checked = false;
+                    document.getElementById('estudioConexionSelect').classList.add('hidden');
+                }
+            });
+
+            // Para la validación de SolisCT con Export Manager
+            document.getElementById('exportManager').addEventListener('change', function() {
+                if (this.checked) {
+                    document.getElementById('solisCT').checked = true;
+                    document.getElementById('solisCTSelect').classList.remove('hidden');
+                    document.getElementById('solisCTQuantity').classList.remove('hidden');
+                }
+            });
+            */
 
             // Poblar selector de tejas
             tejas.forEach(teja => {
@@ -931,17 +1039,6 @@
             document.getElementById('customDistance').addEventListener('input', calculateTotalCost);
             locationSelect.addEventListener('change', calculateTotalCost);
 
-            // Función para calcular viáticos
-            function calculateViaticosCosts() {
-                const workDays = parseInt(document.getElementById('workDays').value) || 2;
-                const workers = parseInt(document.getElementById('workers').value) || 2;
-                // Estos valores deberían venir de tu base de datos
-                const costoHospedaje = viaticos.precio_hospedaje;
-                const costoViaticos = viaticos.precio_viaticos;
-                
-                return (costoHospedaje + costoViaticos) * workDays * workers;
-            }
-
             // Modificar la función calculateTotalCost existente
             function calculateTotalCost() {
                 let totalCost = 0;
@@ -1031,11 +1128,22 @@
 
                 // Agregar costo del inversor
                 const selectedInversor = inversores.find(inv => inv.id === parseInt(inversorSelect.value));
+                const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
+                const selectedProteccionCNO = false
                 if (selectedInversor) {
                     const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
-                    console.log("Inversor: ",(selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price))
-                    totalCost += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price);
-                    totalCostSinIva += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price);
+                    console.log("Inversor: ",(selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity))
+                    totalCost += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity);
+                    totalCostSinIva += (selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity);
+                    // Agregar proteccion CNO
+                    const totalInverterPower = selectedInversor ? selectedInversor.power * inversorQuantity : 0;
+                        if (validateCNOProtection(totalInverterPower)) {
+                            const proteccionCNOCost = datos_externos.proteccionCNO;
+                            totalCost += proteccionCNOCost;
+                            totalCostSinIva += proteccionCNOCost;
+                            console.log("Costo protecion CNO: ",proteccionCNOCost);
+                            selectedProteccionCNO = true;
+                        }
                 }
 
                 // Agregar costos externos
@@ -1043,6 +1151,8 @@
                 totalCost += datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)));
                 console.log("MAterial electrico: ",datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico))))
                 
+
+
                 totalCostSinIva += datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)
                 certificacion_retie = (((datos_externos.certificacion_retie_v1 * Math.log((selectedPanel.power/1000)*quantity))-datos_externos.certificacion_retie_v2)/0.6 );
                 console.log("Certifiación: ",(Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * ((Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie))))
@@ -1057,15 +1167,17 @@
                 }   
 
                 // Agregar costos de viaje y viáticos
-                totalCost += calculateTravelCosts();
-                totalCostSinIva += calculateTravelCosts();
-                totalCost += calculateViaticosCosts();
-                totalCostSinIva += calculateViaticosCosts();
+                if (locationSelect.value !== 'Medellin') {
+                    totalCost += calculateTravelCosts();
+                    totalCostSinIva += calculateTravelCosts();
+                    totalCost += calculateViaticosCosts();
+                    totalCostSinIva += calculateViaticosCosts();
+                }
+
                 const imprevistosAmount = totalCostSinIva * (datos_externos.imprevistos / 100);
                 totalCost += imprevistosAmount;
                 totalCostSinIva += totalCostSinIva * (datos_externos.imprevistos / 100);
 
-                const inversorQuantity = parseInt(document.getElementById('inversorQuantity_input').value) || 0;
                 const tejasQuantity = parseInt(document.getElementById('tejasQuantity_input').value) || 0;
                 const selectedEstudioConexión = estudios_conexion.find(t => t.id === selectedEstudioConexionId);
                 const protectorQuantity = parseInt(document.getElementById('protectorQuantity_input').value) || 0;
@@ -1077,7 +1189,7 @@
                 // Actualizar el resumen de costos
                 document.getElementById('costSummary').innerHTML = `
                     <p>Costo panel(es): $${(selectedPanel.panel_price * quantity + (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity)).toLocaleString()}</p>
-                    ${selectedInversor ? `<p>Costo inversor (es): $${((selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price)).toLocaleString()}</p>` : ''}
+                    ${selectedInversor ? `<p>Costo inversor (es): $${((selectedInversor.inversor_price * inversorQuantity) + (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity)).toLocaleString()}</p>` : ''}
                     <p>Costo ExportManager: $${((415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + (datos_externos.pct_instalacion * 415942 * exportManagerQuantity)))).toLocaleString()}</p>
                     <p>Costo de CTSolis: $${((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + (datos_externos.pct_iva * ((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity)))).toLocaleString()}</p>
                     <p>Costo de protector(es) inversor(es): $${(( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + (datos_externos.pct_iva * (( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity)))).toLocaleString()}</p>
@@ -1085,9 +1197,10 @@
                     <p>Material eléctrico: $${(datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)))).toLocaleString()}</p>
                     <p>Certificación RETIE: $${(Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * (Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie)))).toLocaleString()}</p>
                     ${selectedEstudioConexionId ? `<p>Estudio de conexión: $${(estudios_conexion.find(t => t.id === selectedEstudioConexionId).precio + (datos_externos.pct_iva * selectedEstudioConexión.precio)).toLocaleString()}</p>`:''} 
-                    <p>Costo medidor bidireccional: $${(( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))).toLocaleString()}</p>
+                    <p>Costo medidor bidireccional: $${(( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))).toLocaleString()} (Este valor puede varior dependiendo del operador de red)</p>
+                    ${selectedProteccionCNO ? `<p>Costo Protección CNO: $${datos_externos.proteccionCNO.toLocaleString()}</p>`:''}
                     <p>Asesoría y Consultoría especializada (2.5%): $${consultoriaCost.toLocaleString()}
-                    <p>Viáticos y transporte: $${(calculateViaticosCosts() + calculateTravelCosts()).toLocaleString()}</p>
+                    <p>Viáticos y transporte:(aplican si es afuera de MEDELLIN) $${(calculateViaticosCosts() + calculateTravelCosts()).toLocaleString()}</p>
                     <p>Imprevistos (${datos_externos.imprevistos}%): $${imprevistosAmount.toLocaleString()}</p>
                     <br>
                     <h3>Subtotal sin IVA: $${totalCostSinIva.toLocaleString()}</h3>

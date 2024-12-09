@@ -38,7 +38,8 @@ def home(request):
         'certificacion_retie_v2': certificacion_retie_v2,
         'pct_iva': datos_externos.pct_iva if datos_externos else 0,
         'pct_instalacion': datos_externos.pct_instalacion if datos_externos else 0,
-        'consultoria_tributaria': datos_externos.consultoria_tributaria if datos_externos else 0
+        'consultoria_tributaria': datos_externos.consultoria_tributaria if datos_externos else 0,
+        'proteccionCNO': datos_externos.proteccionCNO if datos_externos else 0
     }
 
     # Obtener datos de tejas de la base de datos

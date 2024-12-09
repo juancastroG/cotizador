@@ -10,6 +10,7 @@ class DatosExternos(models.Model):
     pct_iva = models.FloatField(help_text="Porcentaje de IVA", default=0.19)
     pct_instalacion = models.FloatField(help_text="Porcentaje de instalación", default=0.10)
     consultoria_tributaria = models.FloatField(help_text="Porcentaje de consultoria tributaria", default=0.025)
+    proteccionCNO = models.FloatField(help_text="Costo de protección CNO", default=200000)
 
     class Meta:
         verbose_name = "Datos Externos"
