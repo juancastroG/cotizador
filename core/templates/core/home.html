@@ -1,12 +1,140 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Cotizador</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Para los iconos -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
+    <head>
+        <title>Cotizador Solar</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        
+        <!-- Font Awesome -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        
+        <!-- Google Fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['Inter', 'sans-serif'],
+                        },
+                        colors: {
+                            'primary': '#10b981',
+                            'primary-hover': '#059669',
+                        }
+                    }
+                }
+            }
+        </script>
+        <style>
+            /* Gradient background */
+            .gradient-bg {
+                background: linear-gradient(135deg, #f0fdf4 0%, #ccfbf1 100%);
+            }
+
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: #eef5f8;
+            }
+
+            /* Estilos para inputs y selects */
+            .custom-input, .custom-select {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border: 1px solid #e5e7eb;
+                border-radius: 0.5rem;
+                background-color: white;
+                transition: all 0.2s;
+                font-size: 0.95rem;
+                line-height: 1.5;
+                color: #1f2937;
+            }
+
+            .custom-input:focus, .custom-select:focus {
+                outline: none;
+                border-color: #10b981;
+                box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            }
+
+            /* Estilo para selects */
+            .custom-select {
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+                background-position: right 0.5rem center;
+                background-repeat: no-repeat;
+                background-size: 1.5em 1.5em;
+                padding-right: 2.5rem;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+            }
+
+            /* Estilos para checkboxes */
+            input[type="checkbox"] {
+                border-radius: 0.25rem;
+                border-color: #d1d5db;
+            }
+
+            input[type="checkbox"]:checked {
+                background-color: #10b981;
+                border-color: #10b981;
+            }
+
+            /* Estilos para tooltips */
+            .help-icon {
+                color: #9ca3af;
+                transition: color 0.2s;
+            }
+
+            .help-icon:hover {
+                color: #6b7280;
+            }
+
+            /* Estilos para el contenedor principal */
+            .form-container {
+                background: white;
+                border-radius: 1rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+
+            /* Barra de progreso */
+            .progress-bar {
+                transition: width 0.3s ease-in-out;
+            }
+
+            /* Animaciones */
+            .form-page {
+                transition: all 0.3s ease-in-out;
+            }
+
+            /* Estilos para botones */
+            .custom-button {
+                padding: 0.75rem 1.5rem;
+                border-radius: 0.5rem;
+                font-weight: 500;
+                transition: all 0.2s;
+            }
+
+            .primary-button {
+                background-color: #10b981;
+                color: white;
+            }
+
+            .primary-button:hover {
+                background-color: #059669;
+            }
+
+            .secondary-button {
+                background-color: #f3f4f6;
+                color: #1f2937;
+            }
+
+            .secondary-button:hover {
+                background-color: #e5e7eb;
+            }
+        </style>
+    </head>
+<body>
 
     <script id="tejas-data" type="application/json">
         {{ tejas|safe }}
@@ -24,447 +152,403 @@
         {{ estudios_conexion|safe }}
     </script>
     <!-- Logo -->
-    <div class="absolute top-4 left-4">
-        <img src="https://via.placeholder.com/150" alt="Logo" class="w-32">
+    {% load static %}
+    <div class="absolute top-6 left-6">
+        <img src="{% static 'img/logo.png' %}" alt="Logo" class="h-12">
     </div>
-
-    <!-- Modal Container -->
-    <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-            <!-- Progress bar -->
-            <div class="w-full h-2 bg-gray-200">
-                <div id="progress-bar" class="h-2 bg-blue-500 transition-all duration-300" style="width: 0%"></div>
+    <!-- Contenedor principal -->
+    <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl">
+            <!-- Barra de progreso -->
+            <div class="h-2 bg-gray-100 rounded-t-xl">
+                <div id="progress-bar" class="h-2 bg-emerald-500 rounded-t-xl transition-all duration-300" style="width: 0%"></div>
             </div>
 
-            <!-- Modal content -->
-            <div class="p-6">
+            <!-- Contenido del formulario -->
+            <div class="p-8">
                 <div id="form-pages">
-                    <!-- Page 1 -->
-                    <!-- Modificación de la primera página del modal -->
+                    <!-- Página 1: Datos del Cliente -->
                     <div class="form-page active" data-page="1">
-                        <h2 class="text-2xl font-bold mb-4">Datos del Cliente</h2>
-                        <div class="space-y-4">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-8">Datos del Cliente</h2>
+                        <div class="space-y-6">
                             <!-- Nombre completo -->
                             <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Nombre Completo
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Ingrese su nombre completo como aparece en su documento de identidad y factura de energía">
-                                        <i class="fas fa-question-circle"></i>
+                                <label class="form-label flex items-center">
+                                    Nombre Completo
+                                    <span class="help-icon" title="Ingrese su nombre completo como aparece en su documento de identidad y factura de energía">
+                                        <i class="fas fa-circle-question text-sm"></i>
                                     </span>
                                 </label>
-                                <input type="text" id="fullName" 
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <input type="text" id="fullName" class="custom-input">
                             </div>
 
-                            <!-- Consumo Cliente -->
-                            <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Consumo Cliente (kwh/mes)
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Ingrese su consumo promedio mensual de energía eléctrica. Lo puede encontrar en su factura de energía en la sección 'Consumo mensual' o 'Histórico de consumo'. Este valor es crucial para dimensionar correctamente su sistema solar.">
-                                        <i class="fas fa-question-circle"></i>
-                                    </span>
-                                </label>
-                                <input type="number" id="consumption" 
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
+                            <!-- Grid de 2 columnas para consumo y costo -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Consumo Cliente -->
+                                <div class="relative">
+                                    <label class="form-label flex items-center">
+                                        Consumo Cliente (kWh/mes)
+                                        <span class="help-icon" title="Ingrese su consumo promedio mensual de energía eléctrica">
+                                            <i class="fas fa-circle-question text-sm"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="consumption" class="custom-input">
+                                </div>
 
-                            <!-- Costo $/kwh -->
-                            <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Costo ($/kwh)
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Valor del kilowatt hora que aparece en su factura. Puede encontrarlo como 'Tarifa por kWh' o 'Costo unitario'. Este valor nos ayuda a calcular su ahorro potencial.">
-                                        <i class="fas fa-question-circle"></i>
-                                    </span>
-                                </label>
-                                <input type="number" id="costPerKwh" step="0.01"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-
-                            <!-- Contribución -->
-                            <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Contribución
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Porcentaje de contribución aplicado a su factura. Este valor puede variar según su tipo de servicio y ubicación.">
-                                        <i class="fas fa-question-circle"></i>
-                                    </span>
-                                </label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <input type="number" id="contribution" value="20" 
-                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-12">
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <span class="text-gray-500 sm:text-sm">%</span>
-                                    </div>
+                                <!-- Costo $/kwh -->
+                                <div class="relative">
+                                    <label class="form-label flex items-center">
+                                        Costo ($/kWh)
+                                        <span class="help-icon" title="Valor del kilowatt hora que aparece en su factura">
+                                            <i class="fas fa-circle-question text-sm"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="costPerKwh" class="custom-input">
                                 </div>
                             </div>
 
-                            <!-- Total Factura (calculado automáticamente) -->
-                            <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Total Facturado ($)
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Este valor se calcula automáticamente basado en su consumo y tarifa">
-                                        <i class="fas fa-question-circle"></i>
-                                    </span>
-                                </label>
-                                <input type="text" id="totalBill" readonly
-                                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm">
+                            <!-- Grid de 2 columnas para contribución y total -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Contribución -->
+                                <div class="relative">
+                                    <label class="form-label flex items-center">
+                                        Contribución
+                                        <span class="help-icon" title="Porcentaje de contribución aplicado a su factura">
+                                            <i class="fas fa-circle-question text-sm"></i>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="number" id="contribution" value="20" class="custom-input pr-12">
+                                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                                    </div>
+                                </div>
+
+                                <!-- Total Factura -->
+                                <div class="relative">
+                                    <label class="form-label flex items-center">
+                                        Total Facturado ($)
+                                        <span class="help-icon" title="Este valor se calcula automáticamente">
+                                            <i class="fas fa-circle-question text-sm"></i>
+                                        </span>
+                                    </label>
+                                    <input type="text" id="totalBill" readonly class="custom-input bg-gray-50">
+                                </div>
                             </div>
 
-                            <!-- Transformador Cliente -->
-                            <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Transformador Cliente (kVA)
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Capacidad del transformador que alimenta su instalación. Puede consultarlo en:
-                                        ENEL: https://www.enel.com.co/es/personas/servicio-al-cliente.html
-                                        EPM: https://www.epm.com.co/portalpagos/
-                                        Este dato es importante para determinar la capacidad máxima de su sistema solar.">
-                                        <i class="fas fa-question-circle"></i>
-                                    </span>
-                                </label>
-                                <input type="number" id="transformer" 
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
+                            <!-- Grid de 2 columnas para transformador y área -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Transformador -->
+                                <div class="relative">
+                                    <label class="form-label flex items-center">
+                                        Transformador Cliente (kVA)
+                                        <span class="help-icon" title="Capacidad del transformador que alimenta su instalación">
+                                            <i class="fas fa-circle-question text-sm"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="transformer" class="custom-input">
+                                </div>
 
-                            <!-- Área disponible -->
-                            <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Área disponible (m²)
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Espacio total disponible para la instalación de paneles solares. Considere áreas como:
-                                        - Techo o terraza
-                                        - Terreno libre
-                                        - Estacionamiento techado
-                                        Un panel típico ocupa aproximadamente 2m². El área debe estar libre de sombras la mayor parte del día.">
-                                        <i class="fas fa-question-circle"></i>
-                                    </span>
-                                </label>
-                                <input type="number" id="availableArea" 
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <!-- Área disponible -->
+                                <div class="relative">
+                                    <label class="form-label flex items-center">
+                                        Área disponible (m²)
+                                        <span class="help-icon" title="Espacio total disponible para la instalación">
+                                            <i class="fas fa-circle-question text-sm"></i>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="availableArea" class="custom-input">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Page 2 -->
+                    <!-- Página 2: Selección de Paneles -->
                     <div class="form-page hidden" data-page="2">
-                        <h2 class="text-2xl font-bold mb-4">Selección de Paneles Solares</h2>
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-8">Selección de Paneles Solares</h2>
                         
                         <!-- Selector de modo -->
-                        <div class="mb-6">
-                            <div class="inline-flex rounded-lg border border-gray-200">
-                                <button type="button" id="manualModeBtn" class="px-4 py-2 rounded-l-lg bg-blue-500 text-white">
-                                    Selección Manual
+                        <div class="mb-8">
+                            <div class="inline-flex rounded-lg border border-gray-200 p-1 bg-gray-50">
+                                <button type="button" id="manualModeBtn" class="custom-button primary-button rounded-md">
+                                    Selección de paneles
                                 </button>
-                                <button type="button" id="autoModeBtn" class="px-4 py-2 rounded-r-lg border-l">
-                                    Selección Automática
+                                <button type="button" id="autoModeBtn" class="custom-button secondary-button rounded-md">
+                                    Estimación de paneles
                                 </button>
                             </div>
                         </div>
 
                         <!-- Modo Manual -->
-                        <div id="manualMode" class="space-y-4">
+                        <div id="manualMode" class="space-y-6">
+                            <!-- Panel Solar -->
                             <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Panel Solar
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Seleccione el modelo de panel solar que desea utilizar">
-                                        <i class="fas fa-question-circle"></i>
+                                <label class="form-label flex items-center">
+                                    Panel Solar
+                                    <span class="help-icon" title="Seleccione el modelo de panel solar">
+                                        <i class="fas fa-circle-question text-sm"></i>
                                     </span>
                                 </label>
-                                <select id="panelSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <select id="panelSelect" class="custom-select">
                                     <option value="">Seleccione un panel</option>
                                 </select>
-                                <div id="panelInfo" class="mt-2 text-sm text-gray-600">
-                                    <!-- La información del panel se mostrará aquí -->
-                                </div>
+                                <div id="panelInfo" class="mt-2 text-sm text-gray-600"></div>
                             </div>
 
+                            <!-- Cantidad de Paneles -->
                             <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Cantidad de Paneles
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Número de paneles a instalar">
-                                        <i class="fas fa-question-circle"></i>
+                                <label class="form-label flex items-center">
+                                    Cantidad de Paneles
+                                    <span class="help-icon" title="Número de paneles a instalar">
+                                        <i class="fas fa-circle-question text-sm"></i>
                                     </span>
                                 </label>
-                                <input type="number" id="panelQuantity" min="0" 
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <input type="number" id="panelQuantity" min="0" class="custom-input">
                             </div>
 
-                            <div class="bg-blue-50 p-4 rounded-lg mt-4">
-                                <h3 class="font-medium text-blue-900">Cobertura Energética</h3>
-                                <div id="coverageInfo" class="mt-2 text-blue-800">
-                                    <!-- La información de cobertura se mostrará aquí -->
-                                </div>
+                            <!-- Cobertura Energética -->
+                            <div class="bg-emerald-50 p-6 rounded-lg">
+                                <h3 class="font-medium text-emerald-900 mb-2">Cobertura Energética</h3>
+                                <div id="coverageInfo" class="text-emerald-800"></div>
                             </div>
                         </div>
 
                         <!-- Modo Automático -->
-                        <div id="autoMode" class="space-y-4 hidden">
+                        <div id="autoMode" class="space-y-6 hidden">
                             <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700">Porcentaje de Cobertura Deseado
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Indique qué porcentaje de su consumo actual desea cubrir con energía solar">
-                                        <i class="fas fa-question-circle"></i>
+                                <label class="form-label flex items-center">
+                                    Porcentaje de energía que le gustaria suplir usando paneles
+                                    <span class="help-icon" title="Indique qué porcentaje de su consumo actual desea cubrir con energía solar">
+                                        <i class="fas fa-circle-question text-sm"></i>
                                     </span>
                                 </label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <input type="number" id="desiredCoverage" min="1" max="100" value="80"
-                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-12">
+                                <div class="relative">
+                                    <input type="number" 
+                                           id="desiredCoverage" 
+                                           min="1" 
+                                           max="100" 
+                                           class="custom-input pr-12" 
+                                    >
                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <span class="text-gray-500 sm:text-sm">%</span>
+                                        <span class="text-gray-500">%</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="bg-green-50 p-4 rounded-lg mt-4">
-                                <h3 class="font-medium text-green-900">Recomendación del Sistema</h3>
-                                <div id="recommendationInfo" class="mt-2 text-green-800">
+                        
+                            <div class="bg-emerald-50 p-6 rounded-lg mt-4">
+                                <h3 class="font-medium text-emerald-900">Recomendación del Sistema</h3>
+                                <div id="recommendationInfo" class="mt-2 text-emerald-800">
                                     <!-- La recomendación se mostrará aquí -->
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Page 3 -->
+                    <!-- Página 3: Equipos y Servicios -->
                     <div class="form-page hidden" data-page="3">
-                        <h2 class="text-2xl font-bold mb-4">Equipos y Servicios Adicionales</h2>
-                        <div class="space-y-6">
-
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-8">Equipos y Servicios Adicionales</h2>
+                        <div class="space-y-8">
                             <!-- Inversores -->
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Inversor
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                        title="Seleccione el inversor adecuado para su sistema">
-                                        <i class="fas fa-question-circle"></i>
-                                    </span>
-                                </label>
-                                <select id="inversorSelect" class="w-full rounded-md border-gray-300">
-                                    <option value="">Seleccione un inversor</option>
-                                </select>
-                                <div class="relative">
-                                    <label class="block text-sm font-medium text-gray-700">Cantidad de Inversores
-                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                            title="Número de inversores a instalar">
-                                            <i class="fas fa-question-circle"></i>
-                                        </span>
-                                    </label>
-                                    <input type="number" id="inversorQuantity_input" min="0" value="1"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <h3 class="text-lg font-medium text-gray-800 mb-4">Inversores</h3>
+                                <div class="space-y-4">
+                                    <div class="relative">
+                                        <label class="form-label flex items-center">
+                                            Inversor
+                                            <span class="help-icon" title="Seleccione el inversor adecuado para su sistema">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <select id="inversorSelect" class="custom-select">
+                                            <option value="">Seleccione un inversor</option>
+                                        </select>
+                                    </div>
+                                    <div class="relative">
+                                        <label class="form-label flex items-center">
+                                            Cantidad de Inversores
+                                            <span class="help-icon" title="Número de inversores a instalar">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="inversorQuantity_input" min="0" value="1" class="custom-input">
+                                    </div>
+                                    <div id="inversorInfo" class="mt-2 text-sm text-gray-600"></div>
                                 </div>
-                                <div id="inversorInfo" class="mt-2 text-sm text-gray-600"></div>
                             </div>
 
                             <!-- Viáticos y Personal -->
-                            <div class="space-y-4">
-                                <h3 class="text-lg font-medium">Viáticos y Personal</h3>
-                                <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <h3 class="text-lg font-medium text-gray-800 mb-4">Viáticos y Personal</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Días de trabajo</label>
-                                        <input type="number" id="workDays" min="0" max="30" value="2" 
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <label class="form-label">Días de trabajo</label>
+                                        <input type="number" id="workDays" min="1" max="30" value="2" class="custom-input">
                                         <p class="mt-1 text-sm text-gray-500">Mínimo 1 día</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Número de trabajadores</label>
-                                        <input type="number" id="workers" min="0" max="10" value="2" 
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <label class="form-label">Número de trabajadores</label>
+                                        <input type="number" id="workers" min="1" max="10" value="2" class="custom-input">
                                         <p class="mt-1 text-sm text-gray-500">Mínimo 1 trabajador</p>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Ubicación -->
-                            <div class="space-y-4">
-                                <h3 class="text-lg font-medium">Ubicación</h3>
-                                <div class="space-y-2">
-                                    <select id="locationSelect" class="w-full rounded-md border-gray-300">
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <h3 class="text-lg font-medium text-gray-800 mb-4">Ubicación</h3>
+                                <div class="space-y-4">
+                                    <select id="locationSelect" class="custom-select">
                                         <option value="">Seleccione una ubicación</option>
                                         <option value="custom">Otra ubicación</option>
                                     </select>
-                                </div>
-                                <div id="customLocationDiv" class="space-y-2 hidden">
-                                    <input type="text" id="customLocation" placeholder="Nombre de la ciudad" 
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <input type="number" id="customDistance" placeholder="Distancia en km desde Medellín" 
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <div id="customLocationDiv" class="space-y-4 hidden">
+                                        <input type="text" id="customLocation" placeholder="Nombre de la ciudad" class="custom-input">
+                                        <input type="number" id="customDistance" placeholder="Distancia en km desde Medellín" class="custom-input">
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Protector de inversores -->
-                            <div class="space-y-2 hidden">
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" id="protectorInversor" class="rounded text-blue-500">
-                                    <span class="text-sm font-medium text-gray-700">¿Incluir protector de inversores?</span>
-                                </label>
-                                <select id="protectorInversorSelect" class="w-full rounded-md border-gray-300 hidden">
-                                    <option value="protector1">Protector Básico 1000W</option>
-                                </select>
-
-                                <div class="relative hidden" id="protectorInversorQuantity">
-                                    <label class="block text-sm font-medium text-gray-700">Cantidad de protectores de inversores
-                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                            title="Número de protectores de inversores a instalar">
-                                            <i class="fas fa-question-circle"></i>
-                                        </span>
-                                    </label>
-                                    <input type="number" id="protectorQuantity_input" min="0" value="0"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                </div>
-                            </div>
                             <!-- Export Manager -->
-                            <div class="mb-4">
-                                <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" 
-                                   class="text-blue-500 hover:text-blue-700 flex items-center">
-                                    <i class="fas fa-play-circle mr-2"></i>
-                                    Ver video explicativo sobre Export Manager
-                                </a>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" id="exportManager" class="rounded text-blue-500">
-                                    <span class="text-sm font-medium text-gray-700">¿Incluir Export Manager?</span>
-                                </label>
-                                <select id="exportManagerSelect" class="w-full rounded-md border-gray-300 hidden">
-                                    <option value="manager1">Export Manager Pro X1</option>
-                                </select>
-                                <div class="relative hidden" id="exportManagerQuantity">
-                                    <label class="block text-sm font-medium text-gray-700">Cantidad de exportManager
-                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                            title="Número de exportManager a instalar">
-                                            <i class="fas fa-question-circle"></i>
-                                        </span>
-                                    </label>
-                                    <input type="number" id="exportQuantity_input" min="0" value="0"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <div class="mb-4">
+                                    <a href="#" class="text-emerald-500 hover:text-emerald-600 flex items-center gap-2">
+                                        <i class="fas fa-play-circle"></i>
+                                        Ver video explicativo sobre Export Manager
+                                    </a>
                                 </div>
-                            </div>
-
-                            <!-- Solis CT -->
-                            <div class="space-y-2 hidden">
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" id="solisCT" class="rounded text-blue-500">
-                                    <span class="text-sm font-medium text-gray-700">¿Incluir Solis CT?</span>
-                                </label>
-                                <select id="solisCTSelect" class="w-full rounded-md border-gray-300 hidden">
-                                    <option value="solis1">Solis CT 5000</option>
-                                </select>
-                                <div class="relative hidden" id="solisCTQuantity">
-                                    <label class="block text-sm font-medium text-gray-700">Cantidad de solisCT
-                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                            title="Número de solisCT a instalar">
-                                            <i class="fas fa-question-circle"></i>
-                                        </span>
+                                <div class="space-y-4">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" id="exportManager" class="rounded text-emerald-500 focus:ring-emerald-500">
+                                        <span class="text-sm font-medium text-gray-700">¿Incluir Export Manager?</span>
                                     </label>
-                                    <input type="number" id="solisCTQuantity_input" min="0" value="0"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <select id="exportManagerSelect" class="custom-select hidden">
+                                        <option value="manager1">Export Manager Pro X1</option>
+                                    </select>
+                                    <div id="exportManagerQuantity" class="hidden">
+                                        <label class="form-label flex items-center">
+                                            Cantidad de Export Manager
+                                            <span class="help-icon" title="Número de Export Manager a instalar">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="exportQuantity_input" min="0" value="0" class="custom-input">
+                                    </div>
                                 </div>
-                            </div>
-
-                            <!-- Estudio de conexión -->
-                            <div class="space-y-2 hidden">
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" id="estudioConexion" class="rounded text-blue-500">
-                                    <span class="text-sm font-medium text-gray-700">¿Incluir estudio de conexión?</span>
-                                </label>
-                                <select id="estudioConexionSelect" class="w-full rounded-md border-gray-300 hidden">
-                                    <option value="">Seleccione el tipo de estudio</option>
-                                </select>
                             </div>
 
                             <!-- Medidor Bidireccional -->
-                            <div class="space-y-2">
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" id="medidorBidireccional" class="rounded text-blue-500">
-                                    <span class="text-sm font-medium text-gray-700">
-                                        ¿Incluir medidor bidireccional?
-                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                            title="Medidor que permite registrar tanto el consumo como la energía generada">
-                                            <i class="fas fa-question-circle"></i>
-                                        </span>
-                                    </span>
-                                </label>
-                                <select id="medidorBidireccionalSelect" class="w-full rounded-md border-gray-300 hidden">
-                                    <option value="medidor1">Medidor Monofásico 120/240V</option>
-                                    <option value="medidor2">Medidor Bifásico 240V</option>
-                                    <option value="medidor3">Medidor Trifásico 208/120V</option>
-                                </select>
-                                <div class="relative hidden" id="medidorBidireccionalQuantity">
-                                    <label class="block text-sm font-medium text-gray-700">Cantidad de medidor bidireccional
-                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                            title="Número de medidor bidireccional a instalar">
-                                            <i class="fas fa-question-circle"></i>
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <div class="space-y-4">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" id="medidorBidireccional" class="rounded text-emerald-500 focus:ring-emerald-500">
+                                        <span class="text-sm font-medium text-gray-700">
+                                            ¿Incluir medidor bidireccional?
+                                            <span class="help-icon" title="Medidor que permite registrar tanto el consumo como la energía generada">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
                                         </span>
                                     </label>
-                                    <input type="number" id="medidorBidireccionalQuantity_input" min="0" value="0"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <select id="medidorBidireccionalSelect" class="custom-select hidden">
+                                        <option value="medidor1">Medidor Monofásico 120/240V</option>
+                                        <option value="medidor2">Medidor Bifásico 240V</option>
+                                        <option value="medidor3">Medidor Trifásico 208/120V</option>
+                                    </select>
+                                    <div id="medidorBidireccionalQuantity" class="hidden">
+                                        <label class="form-label flex items-center">
+                                            Cantidad de medidores
+                                            <span class="help-icon" title="Número de medidores a instalar">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="medidorBidireccionalQuantity_input" min="0" value="0" class="custom-input">
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Tipo de Teja -->
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Tipo de Teja
-                                    <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                          title="Seleccione el tipo de teja donde se instalarán los paneles">
-                                        <i class="fas fa-question-circle"></i>
-                                    </span>
-                                </label>
-                                <select id="tipoTeja" class="w-full rounded-md border-gray-300">
-                                    <option value="">Seleccione el tipo de teja</option>
-                                </select>
-                                <div class="relative"></div>
-                                    <label class="block text-sm font-medium text-gray-700">Cantidad de tejas
-                                        <span class="ml-1 text-gray-400 hover:text-gray-600 cursor-help" 
-                                            title="Número de tejas a instalar">
-                                            <i class="fas fa-question-circle"></i>
-                                        </span>
-                                    </label>
-                                    <input type="number" id="tejasQuantity_input" min="0" value="0"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                </div>
-                                
-                                <div id="tejaPreview" class="mt-2 relative">
-                                    <img id="tejaImage" class="max-w-xs rounded-lg hidden" alt="Vista previa de teja">
-                                    <p id="tejaPrecio" class="mt-2 text-sm text-gray-600"></p>
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <h3 class="text-lg font-medium text-gray-800 mb-4">Tipo de Teja</h3>
+                                <div class="space-y-4">
+                                    <div class="relative">
+                                        <label class="form-label flex items-center">
+                                            Tipo de Teja
+                                            <span class="help-icon" title="Seleccione el tipo de teja donde se instalarán los paneles">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <select id="tipoTeja" class="custom-select">
+                                            <option value="">Seleccione el tipo de teja</option>
+                                        </select>
+                                    </div>
+                                    <div class="relative">
+                                        <label class="form-label flex items-center">
+                                            Cantidad de tejas
+                                            <span class="help-icon" title="Número de tejas a instalar">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="tejasQuantity_input" min="0" value="0" class="custom-input">
+                                    </div>
+                                    <div id="tejaPreview" class="mt-4">
+                                        <img id="tejaImage" class="max-w-xs rounded-lg hidden" alt="Vista previa de teja">
+                                        <p id="tejaPrecio" class="mt-2 text-sm text-gray-600"></p>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Consultoría Tributaria -->
-                            <div class="mb-4">
-                                <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank"
-                                   class="text-blue-500 hover:text-blue-700 flex items-center">
-                                    <i class="fas fa-play-circle mr-2"></i>
-                                    Aprende sobre los beneficios tributarios
-                                </a>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" id="consultoriaTributaria" class="rounded text-blue-500">
-                                    <span class="text-sm font-medium text-gray-700">¿Incluir consultoría de beneficios tributarios?</span>
-                                </label>
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <div class="mb-4">
+                                    <a href="#" class="text-emerald-500 hover:text-emerald-600 flex items-center gap-2">
+                                        <i class="fas fa-play-circle"></i>
+                                        Aprende sobre los beneficios tributarios
+                                    </a>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" id="consultoriaTributaria" class="rounded text-emerald-500 focus:ring-emerald-500">
+                                        <span class="text-sm font-medium text-gray-700">¿Incluir consultoría de beneficios tributarios?</span>
+                                    </label>
+                                </div>
                             </div>
 
                             <!-- Resumen de Costos -->
-                            <div class="bg-gray-50 p-4 rounded-lg mt-6">
-                                <h3 class="font-medium text-gray-900">Resumen de Costos</h3>
-                                <div id="costSummary" class="mt-2 space-y-2">
-                                    <!-- El resumen de costos se mostrará aquí -->
+                            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Resumen de Costos</h3>
+                                <div id="costSummary" class="space-y-2 text-gray-700"></div>
+                                <div class="mt-6 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-lg font-bold text-gray-900">Total Estimado:</p>
+                                        <p class="text-2xl font-bold text-emerald-600" id="totalPrice">$0</p>
+                                    </div>
                                 </div>
-                                <div class="mt-4 pt-4 border-t border-gray-200">
-                                    <p class="text-lg font-bold text-gray-900">Precio Total Estimado: <span id="totalPrice">$0</span></p>
-                                </div>
+                            </div>
+
+                            <!-- Campos ocultos necesarios -->
+                            <div class="hidden">
+                                <div id="protectorInversorQuantity"></div>
+                                <div id="solisCTQuantity"></div>
+                                <select id="protectorInversorSelect"></select>
+                                <select id="solisCTSelect"></select>
+                                <select id="estudioConexionSelect"></select>
+                                <select id="protectorQuantity"></select>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Navigation buttons -->
-                <div class="mt-6 flex justify-between">
-                    <button id="prevBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 hidden">
+                <!-- Navegación -->
+                <div class="flex justify-between mt-8 pt-6 border-t border-gray-100">
+                    <button id="prevBtn" class="custom-button secondary-button hidden">
+                        <i class="fas fa-arrow-left"></i>
                         Anterior
                     </button>
-                    <button id="nextBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    <button id="nextBtn" class="custom-button primary-button ml-auto">
                         Siguiente
+                        <i class="fas fa-arrow-right"></i>
                     </button>
-                    <button id="submitBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 hidden">
-                        Enviar
+                    <button id="submitBtn" class="custom-button primary-button ml-auto hidden">
+                        <i class="fas fa-download"></i>
+                        Descargar Cotización
                     </button>
                 </div>
             </div>
@@ -951,10 +1035,10 @@
             // Event listeners
             panelQuantity.addEventListener('input', calculateManualCoverage);
             inversorQuantity.addEventListener('input',calculateTotalCost);
-            protectorQuantity.addEventListener('input',calculateTotalCost);
+            //protectorQuantity.addEventListener('input',calculateTotalCost);
             desiredCoverage.addEventListener('input', calculateAutoRecommendation);
             exportManagerQuantity.addEventListener('input',calculateTotalCost);
-            solisCTQuantity.addEventListener('input',calculateTotalCost);
+            //solisCTQuantity.addEventListener('input',calculateTotalCost);
             medidorBidireccionalQuantity.addEventListener('input',calculateTotalCost);
             tejasQuantity.addEventListener('input',calculateTotalCost);
 
