@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>">
         <title>Cotizador Solar</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -759,48 +760,6 @@
                 }
             });
 
-            nextBtn.addEventListener('click', () => {
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    updatePage();
-                }
-            });
-
-            submitBtn.addEventListener('click', async () => {
-                // Recoger todos los datos
-                const formData = {
-                    fullName: document.getElementById('fullName').value,
-                    consumption: document.getElementById('consumption').value,
-                    costPerKwh: document.getElementById('costPerKwh').value,
-                    costSummary: document.getElementById('costSummary').textContent,
-                    totalCost: document.getElementById('totalPrice').textContent,
-                    contribution: document.getElementById('contribution').value,
-                    totalBill: document.getElementById('totalBill').value,
-                    transformer: document.getElementById('transformer').value,
-                    availableArea: document.getElementById('availableArea').value
-
-                };
-
-                try {
-                    const response = await fetch('/submit-form/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')  // Función para obtener el token CSRF
-                        },
-                        body: JSON.stringify(formData)
-                    });
-
-                    if (response.ok) {
-                        alert('Formulario enviado con éxito');
-                        // Redirect or show success message
-                    } else {
-                        alert('Error al enviar el formulario');
-                    }
-                } catch (error) {
-                    alert('Error al enviar el formulario');
-                }
-            });
 
             // Función para obtener el token CSRF
             function getCookie(name) {
@@ -1310,7 +1269,468 @@
                     <h3>Subtotal sin IVA: $${totalCostSinIva.toLocaleString()}</h3>
                 `;
                 document.getElementById('totalPrice').textContent = `$${totalCost.toLocaleString()}`;
+
+                return {
+                    "Costo panel(es)": (selectedPanel.panel_price * quantity + 
+                        (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity)),
+                    
+                    "Costo inversor (es)": selectedInversor ? 
+                        ((selectedInversor.inversor_price * inversorQuantity) + 
+                        (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity)) : 0,
+                    
+                    "Costo ExportManager": ((415942 * exportManagerQuantity) + 
+                        (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + 
+                        (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + 
+                        (datos_externos.pct_instalacion * 415942 * exportManagerQuantity)))),
+                    
+                    "Costo de CTSolis": ((288889 * solisCTQuantity) + 
+                        (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + 
+                        (datos_externos.pct_iva * ((288889 * solisCTQuantity) + 
+                        (datos_externos.pct_instalacion * 288889 * solisCTQuantity)))),
+                    
+                    "Costo de protector(es) inversor(es)": ((1428853 * protectorQuantity) + 
+                        (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + 
+                        (datos_externos.pct_iva * ((1428853 * protectorQuantity) + 
+                        (datos_externos.pct_instalacion * 1428853 * protectorQuantity)))),
+                    
+                    "Teja": selectedTejaId ? 
+                        ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
+                        (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
+                        (datos_externos.pct_iva * ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
+                        (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity)))) : 0,
+                    
+                    "Material eléctrico": (datos_externos.material_electrico + 
+                        (datos_externos.pct_instalacion * datos_externos.material_electrico) + 
+                        (datos_externos.pct_iva * (datos_externos.material_electrico + 
+                        (datos_externos.pct_instalacion * datos_externos.material_electrico)))),
+                    
+                    "Certificación RETIE": (Math.round(certificacion_retie) + 
+                        (datos_externos.pct_instalacion * certificacion_retie) + 
+                        (datos_externos.pct_iva * (Math.round(certificacion_retie) + 
+                        (datos_externos.pct_instalacion * certificacion_retie)))),
+                    
+                    "Estudio de conexión": estudioavailable ? estudio_precio : 0,
+                    
+                    "Costo medidor bidireccional": ((1533333 * medidorBidireccionalQuantity) + 
+                        (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + 
+                        (datos_externos.pct_iva * ((1533333 * medidorBidireccionalQuantity) + 
+                        (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))),
+                    
+                    "Protección CNO": selectedProteccionCNO ? datos_externos.proteccionCNO : 0,
+                    
+                    "Asesoria y Consultoria especializada (2.5%)": consultoriaCost,
+                    
+                    "Viaticos y transporte": calculateViaticosCosts() + calculateTravelCosts(),
+                    
+                    "Imprevistos (4%)": imprevistosAmount
+                };
             }
+            //VALIDACIONES
+
+            // Modificar el event listener existente del botón siguiente
+            document.getElementById('nextBtn').addEventListener('click', (e) => {
+                e.preventDefault(); // Prevenir el comportamiento por defecto
+                
+                let isValid = false;
+                
+                switch(currentPage) {
+                    case 1:
+                        isValid = validatePage1();
+                        break;
+                    case 2:
+                        isValid = validatePage2();
+                        break;
+                    case 3:
+                        isValid = validatePage3();
+                        break;
+                }
+
+                if (!isValid) {
+                    // Mostrar mensaje de error general
+                    const errorAlert = document.createElement('div');
+                    errorAlert.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+                    errorAlert.role = 'alert';
+                    errorAlert.innerHTML = `
+                        <strong class="font-bold">Error!</strong>
+                        <span class="block sm:inline"> Por favor complete todos los campos requeridos correctamente antes de continuar.</span>
+                    `;
+                    document.body.appendChild(errorAlert);
+
+                    // Remover la alerta después de 3 segundos
+                    setTimeout(() => {
+                        errorAlert.remove();
+                    }, 3000);
+                    
+                    // Hacer scroll al primer error
+                    const firstError = document.querySelector('.border-red-500');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    return false; // Detener la ejecución
+                }
+
+                // Si todo está válido, proceder a la siguiente página
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updatePage();
+                    removeErrorStyles();
+                    // Hacer scroll al inicio de la nueva página
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+
+            // Modificar el event listener existente del botón siguiente
+            document.getElementById('submitBtn').addEventListener('click', async (e) => { 
+                e.preventDefault(); // Prevenir el comportamiento por defecto
+                
+                let isValid = false;
+                
+                switch(currentPage) {
+                    case 1:
+                        isValid = validatePage1();
+                        break;
+                    case 2:
+                        isValid = validatePage2();
+                        break;
+                    case 3:
+                        isValid = validatePage3();
+                        break;
+                }
+
+                if (!isValid) {
+                    // Mostrar mensaje de error general
+                    const errorAlert = document.createElement('div');
+                    errorAlert.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+                    errorAlert.role = 'alert';
+                    errorAlert.innerHTML = `
+                        <strong class="font-bold">Error!</strong>
+                        <span class="block sm:inline"> Por favor complete todos los campos requeridos correctamente antes de continuar.</span>
+                    `;
+                    document.body.appendChild(errorAlert);
+
+                    // Remover la alerta después de 3 segundos
+                    setTimeout(() => {
+                        errorAlert.remove();
+                    }, 3000);
+                    
+                    // Hacer scroll al primer error
+                    const firstError = document.querySelector('.border-red-500');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    return false; // Detener la ejecución
+                } else {
+                            const formData = {
+                                fullName: document.getElementById('fullName').value,
+                                consumption: document.getElementById('consumption').value,
+                                costPerKwh: document.getElementById('costPerKwh').value,
+                                costSummary: calculateTotalCost(),
+                                totalCost: document.getElementById('totalPrice').textContent,
+                                contribution: document.getElementById('contribution').value,
+                                transformer: document.getElementById('transformer').value,
+                                availableArea: document.getElementById('availableArea').value
+                            };
+
+                            try {
+                                // Usar await para el fetch
+                                const response = await fetch('/generate-pdf/', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': getCookie('csrftoken')
+                                    },
+                                    body: JSON.stringify(formData)
+                                });
+
+                                if (response.ok) {
+                                    // Usar await para obtener el blob
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `Cotizacion-${formData.fullName}.pdf`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    
+                                    // Limpiar después de un breve retraso
+                                    setTimeout(() => {
+                                        window.URL.revokeObjectURL(url);
+                                        document.body.removeChild(a);
+                                    }, 100);
+
+                                    // Mostrar mensaje de éxito
+                                    const successAlert = document.createElement('div');
+                                    successAlert.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
+                                    successAlert.role = 'alert';
+                                    successAlert.innerHTML = `
+                                        <strong class="font-bold">¡Éxito!</strong>
+                                        <span class="block sm:inline"> La cotización se ha generado correctamente.</span>
+                                    `;
+                                    document.body.appendChild(successAlert);
+
+                                    // Remover la alerta de éxito después de 3 segundos
+                                    setTimeout(() => {
+                                        successAlert.remove();
+                                    }, 3000);
+                                } else {
+                                    throw new Error('Error en la respuesta del servidor');
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                // Mostrar alerta de error más informativa
+                                const errorAlert = document.createElement('div');
+                                errorAlert.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+                                errorAlert.role = 'alert';
+                                errorAlert.innerHTML = `
+                                    <strong class="font-bold">Error!</strong>
+                                    <span class="block sm:inline"> No se pudo generar el PDF. Por favor, intente nuevamente.</span>
+                                `;
+                                document.body.appendChild(errorAlert);
+
+                                // Remover la alerta después de 3 segundos
+                                setTimeout(() => {
+                                    errorAlert.remove();
+                                }, 3000);
+                            }
+                        }
+
+
+                // Si todo está válido, proceder a la siguiente página
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updatePage();
+                    removeErrorStyles();
+                    // Hacer scroll al inicio de la nueva página
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+
+            // Modificar la función validatePage1
+            function validatePage1() {
+                const fullName = document.getElementById('fullName');
+                const consumption = document.getElementById('consumption');
+                const costPerKwh = document.getElementById('costPerKwh');
+                const contribution = document.getElementById('contribution');
+                const transformer = document.getElementById('transformer');
+                const availableArea = document.getElementById('availableArea');
+                
+                let isValid = true;
+                
+                // Remover clases de error previas
+                removeErrorStyles();
+
+                // Validar nombre
+                if (!fullName.value.trim()) {
+                    addErrorStyle(fullName, 'El nombre es requerido');
+                    isValid = false;
+                } else if (fullName.value.trim().length < 3) {
+                    addErrorStyle(fullName, 'El nombre debe tener al menos 3 caracteres');
+                    isValid = false;
+                }
+
+                // Validar consumo
+                if (!consumption.value) {
+                    addErrorStyle(consumption, 'El consumo es requerido');
+                    isValid = false;
+                } else if (parseFloat(consumption.value) <= 0) {
+                    addErrorStyle(consumption, 'El consumo debe ser mayor a 0');
+                    isValid = false;
+                }
+
+                // Validar costo por kWh
+                if (!costPerKwh.value) {
+                    addErrorStyle(costPerKwh, 'El costo por kWh es requerido');
+                    isValid = false;
+                } else if (parseFloat(costPerKwh.value) <= 0) {
+                    addErrorStyle(costPerKwh, 'El costo debe ser mayor a 0');
+                    isValid = false;
+                }
+
+                // Validar contribución
+                if (contribution.value === '') {
+                    addErrorStyle(contribution, 'La contribución es requerida');
+                    isValid = false;
+                } else if (parseFloat(contribution.value) < 0 || parseFloat(contribution.value) > 100) {
+                    addErrorStyle(contribution, 'La contribución debe estar entre 0 y 100');
+                    isValid = false;
+                }
+
+                // Validar transformador
+                if (!transformer.value) {
+                    addErrorStyle(transformer, 'La capacidad del transformador es requerida');
+                    isValid = false;
+                } else if (parseFloat(transformer.value) <= 0) {
+                    addErrorStyle(transformer, 'La capacidad debe ser mayor a 0');
+                    isValid = false;
+                }
+
+                // Validar área disponible
+                if (!availableArea.value) {
+                    addErrorStyle(availableArea, 'El área disponible es requerida');
+                    isValid = false;
+                } else if (parseFloat(availableArea.value) <= 0) {
+                    addErrorStyle(availableArea, 'El área debe ser mayor a 0');
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+
+            // Modificar la función validatePage2
+            function validatePage2() {
+                let isValid = true;
+                const manualMode = document.getElementById('manualMode');
+                
+                if (!manualMode.classList.contains('hidden')) {
+                    // Validar modo manual
+                    const panelSelect = document.getElementById('panelSelect');
+                    const panelQuantity = document.getElementById('panelQuantity');
+
+                    if (!panelSelect.value) {
+                        addErrorStyle(panelSelect, 'Debe seleccionar un panel');
+                        isValid = false;
+                    }
+
+                    if (!panelQuantity.value) {
+                        addErrorStyle(panelQuantity, 'La cantidad de paneles es requerida');
+                        isValid = false;
+                    } else if (parseInt(panelQuantity.value) <= 0) {
+                        addErrorStyle(panelQuantity, 'La cantidad debe ser mayor a 0');
+                        isValid = false;
+                    }
+                } else {
+                    // Validar modo automático
+                    const desiredCoverage = document.getElementById('desiredCoverage');
+                    
+                    if (!desiredCoverage.value) {
+                        addErrorStyle(desiredCoverage, 'El porcentaje de cobertura es requerido');
+                        isValid = false;
+                    } else if (parseFloat(desiredCoverage.value) <= 0 || parseFloat(desiredCoverage.value) > 100) {
+                        addErrorStyle(desiredCoverage, 'El porcentaje debe estar entre 1 y 100');
+                        isValid = false;
+                    }
+                }
+
+                return isValid;
+            }
+
+            // Modificar la función validatePage3
+            function validatePage3() {
+                let isValid = true;
+                
+                // Validar inversor
+                const inversorSelect = document.getElementById('inversorSelect');
+                const inversorQuantity = document.getElementById('inversorQuantity_input');
+
+                if (!inversorSelect.value) {
+                    addErrorStyle(inversorSelect, 'Debe seleccionar un inversor');
+                    isValid = false;
+                }
+
+                if (!inversorQuantity.value || parseInt(inversorQuantity.value) <= 0) {
+                    addErrorStyle(inversorQuantity, 'La cantidad de inversores debe ser mayor a 0');
+                    isValid = false;
+                }
+
+                // Validar días de trabajo y trabajadores
+                const workDays = document.getElementById('workDays');
+                const workers = document.getElementById('workers');
+
+                if (!workDays.value || parseInt(workDays.value) < 1) {
+                    addErrorStyle(workDays, 'Los días de trabajo deben ser al menos 1');
+                    isValid = false;
+                }
+
+                if (!workers.value || parseInt(workers.value) < 1) {
+                    addErrorStyle(workers, 'Debe haber al menos 1 trabajador');
+                    isValid = false;
+                }
+
+                // Validar ubicación
+                const locationSelect = document.getElementById('locationSelect');
+                if (!locationSelect.value) {
+                    addErrorStyle(locationSelect, 'Debe seleccionar una ubicación');
+                    isValid = false;
+                }
+
+                // Si es ubicación personalizada, validar campos adicionales
+                if (locationSelect.value === 'custom') {
+                    const customLocation = document.getElementById('customLocation');
+                    const customDistance = document.getElementById('customDistance');
+
+                    if (!customLocation.value.trim()) {
+                        addErrorStyle(customLocation, 'Debe ingresar el nombre de la ciudad');
+                        isValid = false;
+                    }
+
+                    if (!customDistance.value || parseFloat(customDistance.value) <= 0) {
+                        addErrorStyle(customDistance, 'La distancia debe ser mayor a 0');
+                        isValid = false;
+                    }
+                }
+
+                return isValid;
+            }
+
+            // Actualizar los event listeners para validación en tiempo real
+            document.querySelectorAll('input, select').forEach(element => {
+                element.addEventListener('input', function() {
+                    // Remover estilos de error del elemento actual
+                    this.classList.remove('border-red-500');
+                    const errorMessage = this.parentElement.querySelector('.error-message');
+                    if (errorMessage) {
+                        errorMessage.remove();
+                    }
+                    this.removeAttribute('title');
+                    
+                    // Validar la página actual
+                    let isValid = false;
+                    switch(currentPage) {
+                        case 1:
+                            isValid = validatePage1();
+                            break;
+                        case 2:
+                            isValid = validatePage2();
+                            break;
+                        case 3:
+                            isValid = validatePage3();
+                            break;
+                    }
+                });
+            });
+
+            // Función para agregar estilos de error
+            function addErrorStyle(element, message) {
+                element.classList.add('border-red-500');
+                
+                // Crear o actualizar el mensaje de error
+                let errorDiv = element.parentElement.querySelector('.error-message');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message text-red-500 text-sm mt-1';
+                    element.parentElement.appendChild(errorDiv);
+                }
+                errorDiv.textContent = message;
+
+                // Agregar tooltip con el mensaje de error
+                element.setAttribute('title', message);
+            }
+
+            // Función para remover estilos de error
+            function removeErrorStyles() {
+                document.querySelectorAll('.border-red-500').forEach(element => {
+                    element.classList.remove('border-red-500');
+                    element.removeAttribute('title');
+                });
+
+                document.querySelectorAll('.error-message').forEach(element => {
+                    element.remove();
+                });
+            }
+
+
         });
     </script>
 </body>

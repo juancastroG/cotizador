@@ -5,7 +5,14 @@ import json
 import xmlrpc.client
 from .models import DatosExternos, TipoTeja, Viaticos, Ubicacion, Estudio_conexion
 from django.http import JsonResponse
-
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.colors import Color
+from decimal import Decimal
+from django.http import HttpResponse
 
 def home(request):
 
@@ -189,3 +196,168 @@ def get_odoo_data(models, db, uid, password):
         [inversor_ids])
 
     return (paneles, inversores)
+
+
+#Reporte pdf
+# Definimos los colores de la paleta
+VERDE_CLOROFILA = Color(0.039, 0.239, 0.200)  # #0a3d33
+PINO_OSCURO = Color(0.102, 0.318, 0.267)      # #1a512e
+ESMERALDA_VIVO = Color(0.227, 0.655, 0.208)   # #3aa735
+CYAN_PROFUNDO = Color(0.000, 0.529, 0.463)    # #008776
+
+def format_currency(amount):
+    """Formatea números a formato de moneda"""
+    try:
+        if isinstance(amount, str):
+            # Remover el símbolo de peso y las comas
+            amount = amount.replace('$', '').replace(',', '').strip()
+            if not amount:
+                return "$0.00"
+        return "${:,.2f}".format(float(amount))
+    except (ValueError, TypeError):
+        return "$0.00"
+
+def generate_pdf(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Crear el documento PDF
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="Cotizacion-{data["fullName"]}.pdf"'
+            
+            doc = SimpleDocTemplate(
+                response,
+                pagesize=letter,
+                rightMargin=72,
+                leftMargin=72,
+                topMargin=72,
+                bottomMargin=72
+            )
+            
+            # Contenedor para los elementos del PDF
+            elements = []
+            
+            # Estilos
+            styles = getSampleStyleSheet()
+            styles.add(ParagraphStyle(
+                name='CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                textColor=VERDE_CLOROFILA,
+                spaceAfter=30,
+                alignment=1  # Centrado
+            ))
+            
+            # Título
+            elements.append(Paragraph(
+                "Cotización Sistema Solar",
+                styles['CustomTitle']
+            ))
+            
+            # Información del cliente
+            elements.append(Paragraph(
+                f"Cliente: {data['fullName']}",
+                styles['Heading2']
+            ))
+            elements.append(Spacer(1, 12))
+            
+            # Detalles del sistema
+            system_info = [
+                ['Concepto', 'Valor'],
+                ['Consumo mensual', f"{data['consumption']} kWh"],
+                ['Costo por kWh', format_currency(data['costPerKwh'])],
+                ['Área disponible', f"{data['availableArea']} m²"],
+                ['Transformador', f"{data['transformer']} kVA"],
+            ]
+            
+            # Crear tabla de información del sistema
+            system_table = Table(system_info, colWidths=[4*inch, 2*inch])
+            system_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), CYAN_PROFUNDO),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 14),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+                ('GRID', (0, 0), (-1, -1), 1, VERDE_CLOROFILA),
+            ]))
+            elements.append(system_table)
+            elements.append(Spacer(1, 20))
+            
+            # Resumen de costos
+            cost_items = [
+                ['Componente', 'Costo'],
+                ['Panel(es)', format_currency(data['costSummary'].get('Costo panel(es)', 0))],
+                ['Inversor(es)', format_currency(data['costSummary'].get('Costo inversor (es)', 0))],
+                ['ExportManager', format_currency(data['costSummary'].get('Costo ExportManager', 0))],
+                ['CTSolis', format_currency(data['costSummary'].get('Costo de CTSolis', 0))],
+                ['Protector(es) inversor(es)', format_currency(data['costSummary'].get('Costo de protector(es) inversor(es)', 0))],
+                ['Teja', format_currency(data['costSummary'].get('Teja', 0))],
+                ['Material eléctrico', format_currency(data['costSummary'].get('Material eléctrico', 0))],
+                ['Certificación RETIE', format_currency(data['costSummary'].get('Certificación RETIE', 0))],
+                ['Estudio de conexión', format_currency(data['costSummary'].get('Estudio de conexión', 0))],
+                ['Medidor bidireccional', format_currency(data['costSummary'].get('Costo medidor bidireccional', 0))],
+                ['Asesoría y Consultoría', format_currency(data['costSummary'].get('Asesoria y Consultoria especializada (2.5%)', 0))],
+                ['Viáticos y transporte', format_currency(data['costSummary'].get('Viaticos y transporte', 0))],
+                ['Imprevistos (4%)', format_currency(data['costSummary'].get('Imprevistos (4%)', 0))],
+            ]
+            
+            if data['costSummary'].get('Protección CNO', 0) > 0:
+                cost_items.insert(-2, ['Protección CNO', format_currency(data['costSummary']['Protección CNO'])])
+            
+            cost_table = Table(cost_items, colWidths=[4*inch, 2*inch])
+            cost_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), ESMERALDA_VIVO),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (1, -1), 'RIGHT'),  # Alinear costos a la derecha
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 14),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+                ('GRID', (0, 0), (-1, -1), 1, PINO_OSCURO),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 10),
+                ('TOPPADDING', (0, 1), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ]))
+            elements.append(cost_table)
+            elements.append(Spacer(1, 20))
+            
+            # Total
+            elements.append(Paragraph(
+                f"Total Estimado: {format_currency(data['totalCost'])}",
+                ParagraphStyle(
+                    'TotalStyle',
+                    parent=styles['Heading1'],
+                    fontSize=18,
+                    textColor=VERDE_CLOROFILA,
+                    alignment=2  # Derecha
+                )
+            ))
+            
+            # Nota al pie
+            elements.append(Spacer(1, 30))
+            elements.append(Paragraph(
+                "* Los precios pueden variar según las condiciones del mercado y especificaciones finales del proyecto.",
+                ParagraphStyle(
+                    'Note',
+                    parent=styles['Normal'],
+                    fontSize=8,
+                    textColor=colors.gray
+                )
+            ))
+            
+            # Construir el PDF
+            doc.build(elements)
+            return response
+            
+        except Exception as e:
+            print(f"Error generando PDF: {str(e)}")
+            return HttpResponse(f'Error generando PDF: {str(e)}', status=500)
+    
+    return HttpResponse('Método no permitido', status=405)
