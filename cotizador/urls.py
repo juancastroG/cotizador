@@ -28,6 +28,8 @@ urlpatterns = [
     path('api/locations/', views.get_locations, name='get_locations'),
     path('api/viaticos/', views.get_viaticos, name='get_viaticos'),
     path('api/viaticos/', views.get_viaticos, name='get_viaticos'),
-]
+    path('generate-pdf/', views.generate_pdf, name='generate_pdf'),
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    

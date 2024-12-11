@@ -5,14 +5,16 @@ import json
 import xmlrpc.client
 from .models import DatosExternos, TipoTeja, Viaticos, Ubicacion, Estudio_conexion
 from django.http import JsonResponse
+from django.http import HttpResponse
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
 from reportlab.lib.colors import Color
-from decimal import Decimal
-from django.http import HttpResponse
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import os
 
 def home(request):
 
@@ -197,6 +199,10 @@ def get_odoo_data(models, db, uid, password):
 
     return (paneles, inversores)
 
+# Registrar fuentes personalizadas
+pdfmetrics.registerFont(TTFont('MADE_AWELIER', 'static/fonts/MADE_AWELIER.ttf'))
+pdfmetrics.registerFont(TTFont('NUNITO_SANS', 'static/fonts/NunitoSans-Regular.ttf'))
+pdfmetrics.registerFont(TTFont('NUNITO_SANS_BOLD', 'static/fonts/NunitoSans-Bold.ttf'))
 
 #Reporte pdf
 # Definimos los colores de la paleta
@@ -205,66 +211,251 @@ PINO_OSCURO = Color(0.102, 0.318, 0.267)      # #1a512e
 ESMERALDA_VIVO = Color(0.227, 0.655, 0.208)   # #3aa735
 CYAN_PROFUNDO = Color(0.000, 0.529, 0.463)    # #008776
 
+VERDE_HERSIC = Color(0.33, 0.67, 0.24)
+VERDE_OSCURO = Color(0.20, 0.47, 0.17)
+AZUL_TABLA = Color(0.06, 0.32, 0.55)
+
+class PDFWithHeaderFooter(SimpleDocTemplate):
+    def __init__(self, *args, **kwargs):
+        self.client_data = kwargs.pop('client_data', {})
+        super().__init__(*args, **kwargs)
+        self.page_width = letter[0]
+        self.page_height = letter[1]
+
+    def header(self, canvas, doc):
+        canvas.saveState()
+        # Logo
+        logo_path = os.path.join(os.path.dirname(__file__), 'static', 'img', 'logo.png')
+        if os.path.exists(logo_path):
+            canvas.drawImage(logo_path, doc.leftMargin + 400, 
+                           self.page_height - 70, width=100, height=40)
+
+        # Título con MADE AWELIER
+        canvas.setFillColor(colors.green)
+        canvas.rect(doc.leftMargin - 10, self.page_height - 60, 
+                   200, 30, fill=1)
+        canvas.setFillColor(colors.white)
+        canvas.setFont('MADE_AWELIER', 16)
+        canvas.drawString(doc.leftMargin, self.page_height - 50, 
+                         "PROPUESTA ECONÓMICA")
+        
+        # Barra decorativa inferior
+        footer_path = os.path.join('static', 'img', 'footer.png')
+        if os.path.exists(footer_path):
+            canvas.drawImage(footer_path, 0, doc.bottomMargin - 45, 
+                           width=self.page_width, height=25)
+        canvas.restoreState()
+        
+
 def format_currency(amount):
-    """Formatea números a formato de moneda"""
+    """Formatea números a formato de moneda sin decimales"""
     try:
         if isinstance(amount, str):
-            # Remover el símbolo de peso y las comas
             amount = amount.replace('$', '').replace(',', '').strip()
-            if not amount:
-                return "$0.00"
-        return "${:,.2f}".format(float(amount))
+        return "${:,.0f}".format(float(amount))
     except (ValueError, TypeError):
-        return "$0.00"
+        return "$0"
+
+def generate_quote_table(data):
+    """Genera la tabla de cotización detallada"""
+    headers = [
+        ['Componente', 'Cantidad', 'Precio unitario sin IVA e instalacion', 'Total']
+    ]
+    
+    items = []
+    cost_summary = data['costSummary']
+    
+    # Orden específico de los items
+    item_order = [
+        "Costo panel(es)",
+        "Costo inversor (es)",
+        "Costo ExportManager",
+        "Costo de CTSolis",
+        "Costo de protector(es) inversor(es)",
+        "Teja",
+        "Material eléctrico",
+        "Certificación RETIE",
+        "Estudio de conexión",
+        "Costo medidor bidireccional",
+        "Protección CNO",
+        "Asesoria y Consultoria especializada (2.5%)",
+        "Viaticos y transporte",
+        "Imprevistos (4%)",
+    ]
+
+    # Agregar items en el orden especificado
+    for key in item_order:
+        value = cost_summary.get(key)
+        if value and isinstance(value, dict) and value.get('total'):
+            items.append([
+                value.get('nombreProducto', key),
+                str(value.get('cantidad', '')),
+                format_currency(value.get('precioUnitario', 0)),
+                format_currency(value.get('total', 0))
+            ])
+    # Agregar subtotal y total
+    total_sin_iva = cost_summary.get('Costo sin IVA').get('total')
+    total = cost_summary.get('Costo Total').get('total')
+    
+    # Agregar filas de totales
+    items.append([''] * 4)  # Fila vacía para espaciado
+    items.append(['Subtotal (Productos sin IVA)', '', '', format_currency(total_sin_iva)])
+    items.append(['Total a pagar', '', '', format_currency(total) ])
+    #AQUI SE PODRIA PONER TOTAL DESPUES DE DESCUENTO Y HALAR LOS DATOS DESDE UNA BD (FUTUTO)
+    
+    table = Table(headers + items, colWidths=[2.15*inch, 0.75*inch, 2.8*inch, 1.2*inch])
+    table.setStyle(TableStyle([
+        # Estilos para el encabezado
+        ('BACKGROUND', (0, 0), (-1, 0), VERDE_HERSIC),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        
+        # Estilos para las filas de datos
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),  # Alinear nombres a la izquierda
+        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),  # Alinear números a la derecha
+        
+        # Grilla y espaciado
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        
+        # Línea más gruesa después del encabezado
+        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.black),
+    ]))
+    
+    
+    # Aplicar estilos específicos para las últimas filas
+    for i in range(-2, 0):
+        table.setStyle(TableStyle([
+            ('FONTNAME', (0, i), (-1, i), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, i), (-1, i), 10),
+            ('BACKGROUND', (0, i), (-1, i), colors.lightgrey),
+            ('ALIGN', (0, i), (0, i), 'RIGHT'),  # Alinear "Subtotal", "IVA" y "Total" a la derecha
+        ]))
+    
+    return table
+
+def generate_amortization_table(total_amount, years):
+    """Genera la tabla de amortización con menos columnas y sin decimales"""
+    headers = [
+        ['Nº', 'CUOTA', 'PRINCIPAL', 'INTERÉS', 'SALDO FINAL']
+    ]
+    
+    monthly_rate = 0.018
+    months = years * 12
+    monthly_payment = total_amount * (monthly_rate * (1 + monthly_rate)**months) / ((1 + monthly_rate)**months - 1)
+    
+    balance = total_amount
+    rows = []
+    
+    for i in range(1, months + 1):
+        interest = balance * monthly_rate
+        principal = monthly_payment - interest
+        balance = max(0, balance - principal)
+        
+        row = [
+            str(i),
+            format_currency(monthly_payment),
+            format_currency(principal),
+            format_currency(interest),
+            format_currency(balance)
+        ]
+        rows.append(row)
+    
+    table = Table(headers + rows, 
+                 colWidths=[0.7*inch, 1.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+    
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), AZUL_TABLA),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'NUNITO_SANS_BOLD'),
+        ('FONTNAME', (0, 1), (-1, -1), 'NUNITO_SANS'),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    
+    return table
 
 def generate_pdf(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            payment_type = data.get('paymentType', 'contado')
+            credit_years = int(data.get('creditYears', 0))
             
-            # Crear el documento PDF
             response = HttpResponse(content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="Cotizacion-{data["fullName"]}.pdf"'
             
-            doc = SimpleDocTemplate(
+            doc = PDFWithHeaderFooter(
                 response,
                 pagesize=letter,
-                rightMargin=72,
-                leftMargin=72,
-                topMargin=72,
-                bottomMargin=72
+                rightMargin=65,
+                leftMargin=65,
+                topMargin=120,
+                bottomMargin=72,
+                client_data=data
             )
             
-            # Contenedor para los elementos del PDF
             elements = []
             
-            # Estilos
-            styles = getSampleStyleSheet()
-            styles.add(ParagraphStyle(
-                name='CustomTitle',
-                parent=styles['Heading1'],
-                fontSize=24,
-                textColor=VERDE_CLOROFILA,
-                spaceAfter=30,
-                alignment=1  # Centrado
-            ))
-            
-            # Título
-            elements.append(Paragraph(
-                "Cotización Sistema Solar",
-                styles['CustomTitle']
-            ))
-            
             # Información del cliente
-            elements.append(Paragraph(
-                f"Cliente: {data['fullName']}",
-                styles['Heading2']
-            ))
-            elements.append(Spacer(1, 12))
+            client_info = [
+                ['Asunto:', 'Propuesta Económica Sistema Fotovoltaico conectado a red'],
+                ['Tipo de cliente:', 'Residencial'],
+                ['Asesor:', 'Hersic International'],
+                ['Nombre del cliente:', data['fullName']],
+                ['Fecha de cotización:', data['date']],
+            ]
             
-            # Detalles del sistema
+            table = Table(client_info, colWidths=[1.5*inch, 5*inch])
+            table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 30))  # Más espacio entre elementos
+            
+            # Texto introductorio
+            elements.append(Paragraph("""
+                Para HERSIC INTERNATIONAL es un gusto presentar la propuesta de energía solar con respecto a los requerimientos de su vivienda.
+                """, ParagraphStyle('Normal')))
+            elements.append(Spacer(1, 7))
+
+            elements.append(Paragraph("""
+                HERSIC INTERNATIONAL es una empresa dedicada a ofrecer soluciones integrales en energía fotovoltaica, alumbrado público y energía termo solar; como fabricantes de nuestros productos podemos ofrecer competitividad y nuestra más alta experiencia para todo lo que ustedes necesitan en el campo de la energía solar.
+                """, ParagraphStyle('Normal')))
+            elements.append(Spacer(1, 7))
+
+            elements.append(Paragraph("""
+                Contamos con soporte de alta ingeniería en todo nuestro con un equipo técnico deseoso de orientar y/o solucionar cualquier problema en su empresa.
+                Entre algunas áreas que nos enfocamos está el soporte técnico especializado a nuestros distribuidores, financiación para contratos PPAs, ejecución de proyectos con el cumplimiento de las normas técnicas nacionales e internacionales en el segmento comercial e industrial, como el acompañamiento y asesoría en temas como beneficios tributarios para sistemas solares fotovoltaicos entre otros. 
+                """, ParagraphStyle('Normal')))
+            elements.append(Spacer(1, 7))
+
+            elements.append(Paragraph("""
+                Tengan ustedes la plena garantía que cuentan con el mayor respaldo y soporte, además de un robusto y completo portafolio con excelentes garantías.
+                """, ParagraphStyle('Normal')))
+            elements.append(Spacer(1, 7))
+            
+
+            elements.append(Paragraph("""
+                Tengan ustedes la plena garantía que cuentan con el mayor respaldo y soporte, además de un robusto y completo portafolio con excelentes garantías.
+                De antemano muchas gracias por contar con HERSIC y permitirnos presentarles nuestra propuesta. Quedamos a su entera disposición para cualquier inquietud que tengan sobre ésta
+                """, ParagraphStyle('Normal')))
+            elements.append(Spacer(1, 30))
+
+            # Tabla de datos del usuario
             system_info = [
-                ['Concepto', 'Valor'],
+                ['Datos del cliente', 'Valor'],
                 ['Consumo mensual', f"{data['consumption']} kWh"],
                 ['Costo por kWh', format_currency(data['costPerKwh'])],
                 ['Área disponible', f"{data['availableArea']} m²"],
@@ -272,7 +463,7 @@ def generate_pdf(request):
             ]
             
             # Crear tabla de información del sistema
-            system_table = Table(system_info, colWidths=[4*inch, 2*inch])
+            system_table = Table(system_info, colWidths=[4*inch, 2.9*inch])
             system_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), CYAN_PROFUNDO),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -283,77 +474,32 @@ def generate_pdf(request):
                 ('BACKGROUND', (0, 1), (-1, -1), colors.white),
                 ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
                 ('GRID', (0, 0), (-1, -1), 1, VERDE_CLOROFILA),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 12),
+                ('TOPPADDING', (0, 1), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
             ]))
             elements.append(system_table)
             elements.append(Spacer(1, 20))
             
-            # Resumen de costos
-            cost_items = [
-                ['Componente', 'Costo'],
-                ['Panel(es)', format_currency(data['costSummary'].get('Costo panel(es)', 0))],
-                ['Inversor(es)', format_currency(data['costSummary'].get('Costo inversor (es)', 0))],
-                ['ExportManager', format_currency(data['costSummary'].get('Costo ExportManager', 0))],
-                ['CTSolis', format_currency(data['costSummary'].get('Costo de CTSolis', 0))],
-                ['Protector(es) inversor(es)', format_currency(data['costSummary'].get('Costo de protector(es) inversor(es)', 0))],
-                ['Teja', format_currency(data['costSummary'].get('Teja', 0))],
-                ['Material eléctrico', format_currency(data['costSummary'].get('Material eléctrico', 0))],
-                ['Certificación RETIE', format_currency(data['costSummary'].get('Certificación RETIE', 0))],
-                ['Estudio de conexión', format_currency(data['costSummary'].get('Estudio de conexión', 0))],
-                ['Medidor bidireccional', format_currency(data['costSummary'].get('Costo medidor bidireccional', 0))],
-                ['Asesoría y Consultoría', format_currency(data['costSummary'].get('Asesoria y Consultoria especializada (2.5%)', 0))],
-                ['Viáticos y transporte', format_currency(data['costSummary'].get('Viaticos y transporte', 0))],
-                ['Imprevistos (4%)', format_currency(data['costSummary'].get('Imprevistos (4%)', 0))],
-            ]
             
-            if data['costSummary'].get('Protección CNO', 0) > 0:
-                cost_items.insert(-2, ['Protección CNO', format_currency(data['costSummary']['Protección CNO'])])
-            
-            cost_table = Table(cost_items, colWidths=[4*inch, 2*inch])
-            cost_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), ESMERALDA_VIVO),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('ALIGN', (1, 0), (1, -1), 'RIGHT'),  # Alinear costos a la derecha
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 14),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-                ('GRID', (0, 0), (-1, -1), 1, PINO_OSCURO),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 10),
-                ('TOPPADDING', (0, 1), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-            ]))
-            elements.append(cost_table)
+            # Tabla de cotización
+            elements.append(generate_quote_table(data))
             elements.append(Spacer(1, 20))
             
-            # Total
-            elements.append(Paragraph(
-                f"Total Estimado: {format_currency(data['totalCost'])}",
-                ParagraphStyle(
-                    'TotalStyle',
-                    parent=styles['Heading1'],
-                    fontSize=18,
-                    textColor=VERDE_CLOROFILA,
-                    alignment=2  # Derecha
-                )
-            ))
-            
-            # Nota al pie
-            elements.append(Spacer(1, 30))
-            elements.append(Paragraph(
-                "* Los precios pueden variar según las condiciones del mercado y especificaciones finales del proyecto.",
-                ParagraphStyle(
-                    'Note',
-                    parent=styles['Normal'],
-                    fontSize=8,
-                    textColor=colors.gray
-                )
-            ))
-            
-            # Construir el PDF
-            doc.build(elements)
+            # Si es pago a crédito, agregar tabla de amortización
+            if payment_type == 'credito' and credit_years > 0:
+                elements.append(PageBreak())
+                elements.append(Paragraph('Plan de Amortización', 
+                                       ParagraphStyle('Heading1')))
+                elements.append(Spacer(1, 20))
+                
+                # Crear la tabla de amortización en landscape
+                total_amount = float(data['totalCost'].replace('$', '').replace(',', ''))
+                elements.append(generate_amortization_table(total_amount, credit_years))
+            doc.build(elements, onFirstPage=doc.header, onLaterPages=doc.header)
             return response
             
         except Exception as e:

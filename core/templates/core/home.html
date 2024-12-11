@@ -596,20 +596,25 @@
 
         function calculateTravelCosts() {
             if (locationSelect.value === "Medellin"){
-                //console.log("NO HUBO COBRO Travel")
                 return 0;
             }
             let distance = 0;
             try {
                 if (locationSelect.value === 'custom') {
+                    const customLocationDiv = document.getElementById('customLocationDiv');
+                    customLocationDiv.classList.remove('hidden');
                     distance = parseFloat(customDistance.value) || 0;
+                    
                 } else if (locationSelect.value && locations.length > 0) {
+                    const customLocationDiv = document.getElementById('customLocationDiv');
+                    customLocationDiv.classList.add('hidden');
                     const selectedLocation = locations.find(l => l.id === parseInt(locationSelect.value));
                     if (selectedLocation) {
                         distance = selectedLocation.km_desde_medellin;
                     }
                 }
             } catch (error) {
+
                 return 0;
             }
             //console.log("SI HUBO COBRO travel: ", distance*2*2300);
@@ -1259,7 +1264,7 @@
                     ${selectedTejaId ? `<p>Teja: $${((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + (datos_externos.pct_iva * ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity)))).toLocaleString()}</p>` : ''}
                     <p>Material eléctrico: $${(datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)))).toLocaleString()}</p>
                     <p>Certificación RETIE: $${(Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * (Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie)))).toLocaleString()}</p>
-                    ${estudioavailable ? `<p>Estudio de conexión: $${estudio_precio.toLocaleString()}</p>`:''} 
+                    ${estudioavailable ? `<p>Estudio de conexión: $${(estudio_precio + (datos_externos.pct_iva * estudio_precio)).toLocaleString()}</p>`:''} 
                     <p>Costo medidor bidireccional: $${(( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))).toLocaleString()} (Este valor puede varior dependiendo del operador de red)</p>
                     ${selectedProteccionCNO ? `<p>Costo Protección CNO: $${datos_externos.proteccionCNO.toLocaleString()}</p>`:''}
                     <p>Asesoría y Consultoría especializada (2.5%): $${consultoriaCost.toLocaleString()}
@@ -1271,59 +1276,141 @@
                 document.getElementById('totalPrice').textContent = `$${totalCost.toLocaleString()}`;
 
                 return {
-                    "Costo panel(es)": (selectedPanel.panel_price * quantity + 
-                        (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity)),
-                    
-                    "Costo inversor (es)": selectedInversor ? 
-                        ((selectedInversor.inversor_price * inversorQuantity) + 
-                        (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity)) : 0,
-                    
-                    "Costo ExportManager": ((415942 * exportManagerQuantity) + 
-                        (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + 
-                        (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + 
-                        (datos_externos.pct_instalacion * 415942 * exportManagerQuantity)))),
-                    
-                    "Costo de CTSolis": ((288889 * solisCTQuantity) + 
-                        (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + 
-                        (datos_externos.pct_iva * ((288889 * solisCTQuantity) + 
-                        (datos_externos.pct_instalacion * 288889 * solisCTQuantity)))),
-                    
-                    "Costo de protector(es) inversor(es)": ((1428853 * protectorQuantity) + 
-                        (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + 
-                        (datos_externos.pct_iva * ((1428853 * protectorQuantity) + 
-                        (datos_externos.pct_instalacion * 1428853 * protectorQuantity)))),
-                    
-                    "Teja": selectedTejaId ? 
-                        ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
-                        (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
-                        (datos_externos.pct_iva * ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
-                        (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity)))) : 0,
-                    
-                    "Material eléctrico": (datos_externos.material_electrico + 
-                        (datos_externos.pct_instalacion * datos_externos.material_electrico) + 
-                        (datos_externos.pct_iva * (datos_externos.material_electrico + 
-                        (datos_externos.pct_instalacion * datos_externos.material_electrico)))),
-                    
-                    "Certificación RETIE": (Math.round(certificacion_retie) + 
-                        (datos_externos.pct_instalacion * certificacion_retie) + 
-                        (datos_externos.pct_iva * (Math.round(certificacion_retie) + 
-                        (datos_externos.pct_instalacion * certificacion_retie)))),
-                    
-                    "Estudio de conexión": estudioavailable ? estudio_precio : 0,
-                    
-                    "Costo medidor bidireccional": ((1533333 * medidorBidireccionalQuantity) + 
-                        (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + 
-                        (datos_externos.pct_iva * ((1533333 * medidorBidireccionalQuantity) + 
-                        (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))),
-                    
-                    "Protección CNO": selectedProteccionCNO ? datos_externos.proteccionCNO : 0,
-                    
-                    "Asesoria y Consultoria especializada (2.5%)": consultoriaCost,
-                    
-                    "Viaticos y transporte": calculateViaticosCosts() + calculateTravelCosts(),
-                    
-                    "Imprevistos (4%)": imprevistosAmount
-                };
+                            "Costo panel(es)": {
+                                total: (selectedPanel.panel_price * quantity + 
+                                    (datos_externos.pct_instalacion * selectedPanel.panel_price * quantity)),
+                                cantidad: quantity,
+                                precioUnitario: selectedPanel.panel_price,
+                                nombreProducto: 'Panel Solar'
+                            },
+                            
+                            "Costo inversor (es)": selectedInversor ? {
+                                total: ((selectedInversor.inversor_price * inversorQuantity) + 
+                                    (datos_externos.pct_instalacion * selectedInversor.inversor_price * inversorQuantity)),
+                                cantidad: inversorQuantity,
+                                precioUnitario: selectedInversor.inversor_price,
+                                nombreProducto: 'Inversor'
+                            } : null,
+                            
+                            "Costo ExportManager": {
+                                total: ((415942 * exportManagerQuantity) + 
+                                    (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + 
+                                    (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + 
+                                    (datos_externos.pct_instalacion * 415942 * exportManagerQuantity)))),
+                                cantidad: exportManagerQuantity,
+                                precioUnitario: 415942,
+                                nombreProducto: 'ExportManager'
+                            },
+                            
+                            "Costo de CTSolis": {
+                                total: ((288889 * solisCTQuantity) + 
+                                    (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + 
+                                    (datos_externos.pct_iva * ((288889 * solisCTQuantity) + 
+                                    (datos_externos.pct_instalacion * 288889 * solisCTQuantity)))),
+                                cantidad: solisCTQuantity,
+                                precioUnitario: 288889,
+                                nombreProducto: 'CTSolis'
+                            },
+                            
+                            "Costo de protector(es) inversor(es)": {
+                                total: ((1428853 * protectorQuantity) + 
+                                    (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + 
+                                    (datos_externos.pct_iva * ((1428853 * protectorQuantity) + 
+                                    (datos_externos.pct_instalacion * 1428853 * protectorQuantity)))),
+                                cantidad: protectorQuantity,
+                                precioUnitario: 1428853,
+                                nombreProducto: 'Protector Inversor'
+                            },
+                            
+                            "Teja": selectedTejaId ? {
+                                total: ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
+                                    (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
+                                    (datos_externos.pct_iva * ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + 
+                                    (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity)))),
+                                cantidad: tejasQuantity,
+                                precioUnitario: tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva,
+                                nombreProducto: 'Teja Solar'
+                            } : null,
+                            
+                            "Material eléctrico": {
+                                total: (datos_externos.material_electrico + 
+                                    (datos_externos.pct_instalacion * datos_externos.material_electrico) + 
+                                    (datos_externos.pct_iva * (datos_externos.material_electrico + 
+                                    (datos_externos.pct_instalacion * datos_externos.material_electrico)))),
+                                cantidad: 1,
+                                precioUnitario: datos_externos.material_electrico,
+                                nombreProducto: 'Material Eléctrico'
+                            },
+                            
+                            "Certificación RETIE": {
+                                total: (Math.round(certificacion_retie) + 
+                                    (datos_externos.pct_instalacion * certificacion_retie) + 
+                                    (datos_externos.pct_iva * (Math.round(certificacion_retie) + 
+                                    (datos_externos.pct_instalacion * certificacion_retie)))),
+                                cantidad: 1,
+                                precioUnitario: certificacion_retie,
+                                nombreProducto: 'Certificación RETIE'
+                            },
+                            
+                            "Estudio de conexión": estudioavailable ? {
+                                total: (estudio_precio + (datos_externos.pct_iva * estudio_precio)),
+                                cantidad: 1,
+                                precioUnitario: estudio_precio,
+                                nombreProducto: 'Estudio de Conexión'
+                            } : null,
+                            
+                            "Costo medidor bidireccional": {
+                                total: ((1533333 * medidorBidireccionalQuantity) + 
+                                    (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + 
+                                    (datos_externos.pct_iva * ((1533333 * medidorBidireccionalQuantity) + 
+                                    (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))),
+                                cantidad: medidorBidireccionalQuantity,
+                                precioUnitario: 1533333,
+                                nombreProducto: 'Medidor Bidireccional'
+                            },
+                            
+                            "Protección CNO": selectedProteccionCNO ? {
+                                total: datos_externos.proteccionCNO,
+                                cantidad: 1,
+                                precioUnitario: datos_externos.proteccionCNO,
+                                nombreProducto: 'Protección CNO'
+                            } : null,
+                            
+                            "Asesoria y Consultoria especializada (2.5%)": {
+                                total: consultoriaCost,
+                                cantidad: 1,
+                                precioUnitario: consultoriaCost,
+                                nombreProducto: 'Asesoría y Consultoría'
+                            },
+                            
+                            "Viaticos y transporte": {
+                                total: calculateViaticosCosts() + calculateTravelCosts(),
+                                cantidad: 1,
+                                precioUnitario: calculateViaticosCosts() + calculateTravelCosts(),
+                                nombreProducto: 'Viáticos y Transporte'
+                            },
+                            
+                            "Imprevistos (4%)": {
+                                total: imprevistosAmount,
+                                cantidad: 1,
+                                precioUnitario: imprevistosAmount,
+                                nombreProducto: 'Imprevistos'
+                            },
+                            "Costo sin IVA":{
+                                total: totalCostSinIva,
+                                cantidad: 1,
+                                precioUnitario: totalCostSinIva,
+                                nombreProducto: 'Costo Total'
+                            },
+                            "Costo Total":{
+                                total: totalCost,
+                                cantidad: 1,
+                                precioUnitario: totalCost,
+                                nombreProducto: 'Costo Total'
+                            }
+                            
+                            
+                        };
             }
             //VALIDACIONES
 
@@ -1422,78 +1509,7 @@
                     
                     return false; // Detener la ejecución
                 } else {
-                            const formData = {
-                                fullName: document.getElementById('fullName').value,
-                                consumption: document.getElementById('consumption').value,
-                                costPerKwh: document.getElementById('costPerKwh').value,
-                                costSummary: calculateTotalCost(),
-                                totalCost: document.getElementById('totalPrice').textContent,
-                                contribution: document.getElementById('contribution').value,
-                                transformer: document.getElementById('transformer').value,
-                                availableArea: document.getElementById('availableArea').value
-                            };
-
-                            try {
-                                // Usar await para el fetch
-                                const response = await fetch('/generate-pdf/', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'X-CSRFToken': getCookie('csrftoken')
-                                    },
-                                    body: JSON.stringify(formData)
-                                });
-
-                                if (response.ok) {
-                                    // Usar await para obtener el blob
-                                    const blob = await response.blob();
-                                    const url = window.URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `Cotizacion-${formData.fullName}.pdf`;
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    
-                                    // Limpiar después de un breve retraso
-                                    setTimeout(() => {
-                                        window.URL.revokeObjectURL(url);
-                                        document.body.removeChild(a);
-                                    }, 100);
-
-                                    // Mostrar mensaje de éxito
-                                    const successAlert = document.createElement('div');
-                                    successAlert.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
-                                    successAlert.role = 'alert';
-                                    successAlert.innerHTML = `
-                                        <strong class="font-bold">¡Éxito!</strong>
-                                        <span class="block sm:inline"> La cotización se ha generado correctamente.</span>
-                                    `;
-                                    document.body.appendChild(successAlert);
-
-                                    // Remover la alerta de éxito después de 3 segundos
-                                    setTimeout(() => {
-                                        successAlert.remove();
-                                    }, 3000);
-                                } else {
-                                    throw new Error('Error en la respuesta del servidor');
-                                }
-                            } catch (error) {
-                                console.error('Error:', error);
-                                // Mostrar alerta de error más informativa
-                                const errorAlert = document.createElement('div');
-                                errorAlert.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-                                errorAlert.role = 'alert';
-                                errorAlert.innerHTML = `
-                                    <strong class="font-bold">Error!</strong>
-                                    <span class="block sm:inline"> No se pudo generar el PDF. Por favor, intente nuevamente.</span>
-                                `;
-                                document.body.appendChild(errorAlert);
-
-                                // Remover la alerta después de 3 segundos
-                                setTimeout(() => {
-                                    errorAlert.remove();
-                                }, 3000);
-                            }
+                            showPaymentModal();
                         }
 
 
@@ -1506,6 +1522,58 @@
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             });
+
+            async function handlePaymentOption(type, years = 0) {
+                const formData = {
+                    fullName: document.getElementById('fullName').value,
+                    consumption: document.getElementById('consumption').value,
+                    costPerKwh: document.getElementById('costPerKwh').value,
+                    costSummary: calculateTotalCost(),
+                    totalCost: document.getElementById('totalPrice').textContent,
+                    contribution: document.getElementById('contribution').value,
+                    transformer: document.getElementById('transformer').value,
+                    availableArea: document.getElementById('availableArea').value,
+                    paymentType: type,
+                    creditYears: years,
+                    date: new Date().toLocaleDateString()
+                };
+
+                try {
+                    const response = await fetch('/generate-pdf/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `Cotizacion-${formData.fullName}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        
+                        setTimeout(() => {
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                            // Remover el modal
+                            document.getElementById('paymentModal')?.remove();
+                            document.getElementById('yearsModal')?.remove();
+                        }, 100);
+
+                        //showSuccessMessage();
+                    } else {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    //showErrorMessage();
+                }
+            }
 
             // Modificar la función validatePage1
             function validatePage1() {
@@ -1727,6 +1795,72 @@
 
                 document.querySelectorAll('.error-message').forEach(element => {
                     element.remove();
+                });
+            }
+
+
+            // Función para crear y mostrar el modal
+            function showPaymentModal() {
+                const modalHTML = `
+                    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                            <h2 class="text-xl font-bold mb-4 text-green-700">Opciones de Pago</h2>
+                            <div class="mb-4">
+                                <button id="contadoBtn" class="w-full mb-2 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+                                    Pago de Contado
+                                </button>
+                                <button id="creditoBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                                    Pago a Crédito
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                // Event listeners para los botones
+                document.getElementById('contadoBtn').addEventListener('click', () => {
+                    handlePaymentOption('contado');
+                });
+
+                document.getElementById('creditoBtn').addEventListener('click', () => {
+                    showCreditYearsModal();
+                });
+            }
+
+            // Función para mostrar el modal de años de crédito
+            function showCreditYearsModal() {
+                const yearsModalHTML = `
+                    <div id="yearsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                            <h2 class="text-xl font-bold mb-4 text-green-700">Seleccione el plazo</h2>
+                            <select id="creditYears" class="w-full p-2 border rounded mb-4">
+                                <option value="1">1 año</option>
+                                <option value="2">2 años</option>
+                                <option value="3">3 años</option>
+                                <option value="4">4 años</option>
+                                <option value="5">5 años</option>
+                                <option value="6">6 años</option>
+                                <option value="7">7 años</option>
+                                <option value="8">8 años</option>
+                                <option value="9">9 años</option>
+                                <option value="10">10 años</option>
+
+                            </select>
+                            <button id="confirmYearsBtn" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('paymentModal').remove();
+                document.body.insertAdjacentHTML('beforeend', yearsModalHTML);
+
+                document.getElementById('confirmYearsBtn').addEventListener('click', () => {
+                    const years = document.getElementById('creditYears').value;
+                    handlePaymentOption('credito', parseInt(years));
                 });
             }
 
