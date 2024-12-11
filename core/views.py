@@ -14,6 +14,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.colors import Color
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
 import os
 
 def home(request):
@@ -483,7 +484,7 @@ def generate_pdf(request):
             ]))
             elements.append(system_table)
             elements.append(Spacer(1, 20))
-            
+            elements.append(PageBreak())
             
             # Tabla de cotización
             elements.append(generate_quote_table(data))
@@ -493,8 +494,10 @@ def generate_pdf(request):
             if payment_type == 'credito' and credit_years > 0:
                 elements.append(PageBreak())
                 elements.append(Paragraph('Plan de Amortización', 
-                                       ParagraphStyle('Heading1')))
-                elements.append(Spacer(1, 20))
+                                       ParagraphStyle('Heading1',
+                                                      fontSize=20,
+                                                      alignment=TA_CENTER)))
+                elements.append(Spacer(1, 50))
                 
                 # Crear la tabla de amortización en landscape
                 total_amount = float(data['totalCost'].replace('$', '').replace(',', ''))
