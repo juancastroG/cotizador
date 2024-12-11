@@ -67,10 +67,10 @@ def home(request):
         panel_id = panel['id']
         panel_name = panel['display_name']
         panel_power = panel['nominal_power']
-        panel_area_in_cm = (panel['module_length'] * panel['module_width']) / 10 
+        panel_area = (panel['module_length'] * panel['module_width']) / 10 
         panel_sales_count = panel['sales_count']
         panel_price = panel['list_price']
-        paneles_data.append({'id': panel_id, 'name': panel_name, 'power': panel_power, 'panel_area_in_cm': panel_area_in_cm, 'sales_count': panel_sales_count, 'panel_price': panel_price})
+        paneles_data.append({'id': panel_id, 'name': panel_name, 'power': panel_power, 'panel_area': panel_area, 'sales_count': panel_sales_count, 'panel_price': panel_price})
     inversores_data = []
     for inversor in inversores:
         inversor_id = inversor['id']

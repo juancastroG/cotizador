@@ -936,7 +936,7 @@
                 if (selectedPanel) {
                     panelInfo.innerHTML = `
                         <p>Potencia: ${selectedPanel.power}W</p>
-                        <p>Área: ${(selectedPanel.panel_area_in_cm / 10000).toFixed(2)}m²</p>`;
+                        <p>Área: ${(selectedPanel.panel_area / 100000).toFixed(2)}m²</p>`;
                     calculateManualCoverage();
                 }
             });
