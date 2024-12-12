@@ -25,9 +25,10 @@ def home(request):
         hsp = datos_externos.hsp
         security_factor = datos_externos.security_factor
         imprevistos = datos_externos.imprevistos
-        material_electrico = datos_externos.material_electrico
         certificacion_retie_v1 = datos_externos.certificacion_retie_v1
         certificacion_retie_v2 = datos_externos.certificacion_retie_v2
+        material_electrico_v1 = datos_externos.material_electrico_v1
+        material_electrico_v2 = datos_externos.material_electrico_v2
 
 
     else:
@@ -38,18 +39,21 @@ def home(request):
         material_electrico = 0
         certificacion_retie_v1 = 0
         certificacion_retie_v2 = 0
+        material_electrico_v1 = 0
+        material_electrico_v2 = 0
 
     datos_externos_dict = {
         'hsp': hsp,
         'security_factor': security_factor,
         'imprevistos': imprevistos,
-        'material_electrico': material_electrico,
         'certificacion_retie_v1': certificacion_retie_v1,
         'certificacion_retie_v2': certificacion_retie_v2,
         'pct_iva': datos_externos.pct_iva if datos_externos else 0,
         'pct_instalacion': datos_externos.pct_instalacion if datos_externos else 0,
         'consultoria_tributaria': datos_externos.consultoria_tributaria if datos_externos else 0,
-        'proteccionCNO': datos_externos.proteccionCNO if datos_externos else 0
+        'proteccionCNO': datos_externos.proteccionCNO if datos_externos else 0,
+        'material_electrico_v1': material_electrico_v1,
+        'material_electrico_v2': material_electrico_v2
     }
 
     # Obtener datos de tejas de la base de datos
@@ -386,10 +390,30 @@ def generate_amortization_table(total_amount, years):
     
     return table
 
+def generate_ROI(data):
+    datos_externos = DatosExternos.objects.first()
+    print("DATA:", data)
+    generacion_PV = datos_externos.hsp * datos_externos.security_factor * data.get('potencia_pico') * 360
+    ipc = datos_externos.ipc
+    energia_autoconsumo = generacion_PV * (data.get("energiaAutoconsumo")/100)
+    energia_permuta = generacion_PV * (data["energiaPermuta"]/100)
+    energia_excedente = generacion_PV * (data["energiaExcedente"]/100)
+    costo_autoconsumo = data["totalBill"]
+    costo_permuta = data["costoComercializacion"] - data["costPerKwh"]
+    costo_excedente = data["costoComercializacion"] + datos_externos.valor_generacion
+    print("generacion_PV", generacion_PV)
+    print("energia_autoconsumo", energia_autoconsumo)
+    print("energia_permuta", energia_permuta)
+    print("energia_excedente", energia_excedente)
+    print("costo_autoconsumo", costo_autoconsumo)
+    print("costo_permuta", costo_permuta)
+    print("costo_excedente", costo_excedente)
+
 def generate_pdf(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            generate_ROI(data['costSummary'].get('Datos ROI'))
             payment_type = data.get('paymentType', 'contado')
             credit_years = int(data.get('creditYears', 0))
             

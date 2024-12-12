@@ -133,6 +133,39 @@
             .secondary-button:hover {
                 background-color: #e5e7eb;
             }
+
+            /* para las tejas*/
+            .teja-card {
+                border: 2px solid transparent;
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+
+            .teja-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .teja-card.selected {
+                border-color: #2563eb;
+                background-color: #f8faff;
+            }
+
+            .teja-image-container {
+                aspect-ratio: 4/3;
+                overflow: hidden;
+            }
+
+            .teja-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s ease;
+            }
+
+            .teja-card:hover .teja-image {
+                transform: scale(1.05);
+            }
         </style>
     </head>
 <body>
@@ -467,33 +500,14 @@
 
                             <!-- Tipo de Teja -->
                             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-                                <h3 class="text-lg font-medium text-gray-800 mb-4">Tipo de Teja</h3>
-                                <div class="space-y-4">
-                                    <div class="relative">
-                                        <label class="form-label flex items-center">
-                                            Tipo de Teja
-                                            <span class="help-icon" title="Seleccione el tipo de teja donde se instalarán los paneles">
-                                                <i class="fas fa-circle-question text-sm"></i>
-                                            </span>
-                                        </label>
-                                        <select id="tipoTeja" class="custom-select">
-                                            <option value="">Seleccione el tipo de teja</option>
-                                        </select>
-                                    </div>
-                                    <div class="relative hidden">
-                                        <label class="form-label flex items-center">
-                                            Cantidad de tejas
-                                            <span class="help-icon" title="Número de tejas a instalar">
-                                                <i class="fas fa-circle-question text-sm"></i>
-                                            </span>
-                                        </label>
-                                        <input type="number" id="tejasQuantity_input" min="0" value="0" class="custom-input">
-                                    </div>
-                                    <div id="tejaPreview" class="mt-4">
-                                        <img id="tejaImage" class="max-w-xs rounded-lg hidden" alt="Vista previa de teja">
-                                        <p id="tejaPrecio" class="mt-2 text-sm text-gray-600"></p>
-                                    </div>
+                                <h3 class="text-lg font-medium text-gray-800 mb-4">¿Qué tipo de teja tiene tu techo?</h3>
+                                <p class="text-sm text-gray-600 mb-6">Selecciona el tipo de teja que más se parezca a la de tu instalación:</p>
+                                
+                                <div id="tejasGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <!-- Las tarjetas de tejas se insertarán aquí dinámicamente -->
                                 </div>
+
+                                <input type="hidden" id="tipoTeja" value="">
                             </div>
 
                             <!-- Consultoría Tributaria -->
@@ -511,6 +525,70 @@
                                     </label>
                                 </div>
                             </div>
+
+                            <!-- Supuesto de autoconsumo -->
+                            <!-- Grid de 2 columnas para consumo y costo -->
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <div class="mb-4">
+                                    <a href="#" class="text-emerald-500 hover:text-emerald-600 flex items-center gap-2">
+                                        <i class="fas fa-play-circle"></i>
+                                        Aprende sobre la permuta, el autoconsumo y el excedente de energia.
+                                    </a>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- costoComercializacion -->
+                                    <div class="relative">
+                                        <label class="form-label flex items-center">
+                                            Ingresa el valor de comercialización estimado, lo encontraras en tu recibo
+                                            <span class="help-icon" title="Ingrese el valor mostrado en la factura, en caso de no saber dejar valor por defecto $720">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="costoComercializacion" class="custom-input" value="720">
+                                    </div>
+
+                                    <!-- % energiaAutoconsumo -->
+                                    <div class="relative">
+                                        <label class="form-label flex items-center">
+                                            Ingresa el porcentaje estimado de energia para el autoconsumo
+                                            <span class="help-icon" title="">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="energiaAutoconsumo" class="custom-input">
+                                    </div>
+                                </div>
+                            </div>
+
+
+                             <!-- Supuesto de autoconsumo parte 2 -->
+                            <!-- Grid de 2 columnas para permuta y excdenete -->
+                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- energiaPermuta -->
+                                    <div class="relative">
+                                        <label class="form-label flex items-center">
+                                            Ingresa el porcentaje estimado de energia en permuta 
+                                            <span class="help-icon" title="Ingrese el valor mostrado en la factura, en caso de no saber dejar valor por defecto $720">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="energiaPermuta" class="custom-input">
+                                    </div>
+                                    
+                                    <!-- % energiaExcedente -->
+                                    <div class="relative">
+                                        <label class="form-label flex items-center">
+                                            Ingresa el porcentaje estimado de energia excedente
+                                            <span class="help-icon" title="">
+                                                <i class="fas fa-circle-question text-sm"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="energiaExcedente" class="custom-input">
+                                    </div>
+                                </div>
+                            </div>
+
 
                             <!-- Resumen de Costos -->
                             <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
@@ -562,6 +640,44 @@
     </div>
 -->
     <script>
+        const tejas = JSON.parse(document.getElementById('tejas-data').textContent);
+
+        function createTejaCards() {
+            const tejasGrid = document.getElementById('tejasGrid');
+            const tipoTejaInput = document.getElementById('tipoTeja');
+
+            tejas.forEach(teja => {
+                const card = document.createElement('div');
+                card.className = 'teja-card rounded-lg overflow-hidden bg-white shadow-sm';
+                card.dataset.tejaId = teja.id;
+
+                card.innerHTML = `
+                    <div class="teja-image-container">
+                        <img src="${teja.imagen}" alt="${teja.nombre}" class="teja-image">
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-medium text-gray-800">${teja.nombre}</h4>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    // Remover selección previa
+                    document.querySelectorAll('.teja-card').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+
+                    // Seleccionar nueva tarjeta
+                    card.classList.add('selected');
+                    tipoTejaInput.value = teja.id;
+
+                    // Disparar evento de cambio para mantener la funcionalidad existente
+                    const event = new Event('change');
+                    tipoTejaInput.dispatchEvent(event);
+                });
+
+                tejasGrid.appendChild(card);
+            });
+        }
 
         let locations = [];
 
@@ -701,7 +817,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-
+            createTejaCards();
             initializeLocations();
             initializeViaticos();
 
@@ -799,7 +915,6 @@
             const exportManagerQuantity = document.getElementById('exportQuantity_input')
             const solisCTQuantity = document.getElementById('solisCTQuantity_input')
             const medidorBidireccionalQuantity = document.getElementById('medidorBidireccionalQuantity_input')
-            const tejasQuantity = document.getElementById('tejasQuantity_input')
 
             const coverageInfo = document.getElementById('coverageInfo');
             const desiredCoverage = document.getElementById('desiredCoverage');
@@ -859,29 +974,12 @@
             });
             */
 
-            // Poblar selector de tejas
-            tejas.forEach(teja => {
-                const option = document.createElement('option');
-                option.value = teja.id;
-                option.textContent = teja.nombre;
-                tipoTejaSelect.appendChild(option);
-            });
-
-            // Manejar cambio de teja seleccionada
-            tipoTejaSelect.addEventListener('change', function() {
-                const selectedTeja = tejas.find(t => t.id === parseInt(this.value));
+            document.getElementById('tipoTeja').addEventListener('change', function() {
+                const selectedTejaId = parseInt(this.value);
+                const selectedTeja = tejas.find(t => t.id === selectedTejaId);
                 if (selectedTeja) {
-                    console.log("URL DE LA TEJA", selectedTeja.imagen);
-                    console.log("Teja seleccionada: ",selectedTeja.id);
-                    console.log("PRECIO TEJA: ",selectedTeja.precio_antes_de_iva.toLocaleString());
-                    tejaImage.src = selectedTeja.imagen;
-                    tejaImage.classList.remove('hidden');
-                    tejaPrecio.textContent = `Precio: $${selectedTeja.precio_antes_de_iva.toLocaleString()}`;
-                } else {
-                    tejaImage.classList.add('hidden');
-                    tejaPrecio.textContent = '';
+                    calculateTotalCost();
                 }
-                calculateTotalCost();
             });
 
             // cargar datos de estudio de conexión
@@ -1002,7 +1100,6 @@
             exportManagerQuantity.addEventListener('input',calculateTotalCost);
             //solisCTQuantity.addEventListener('input',calculateTotalCost);
             medidorBidireccionalQuantity.addEventListener('input',calculateTotalCost);
-            tejasQuantity.addEventListener('input',calculateTotalCost);
 
 
             // Manejo de checkboxes y selects
@@ -1021,28 +1118,6 @@
                         calculateTotalCost();
                     });
                 }
-            });
-
-            // Cargar tipos de teja
-            const tejaPreview = document.getElementById('tejaPreview');
-
-            // Esta función se llamaría cuando los datos de tejas estén disponibles
-            function loadTejas(tejas) {
-                tejas.forEach(teja => {
-                    const option = document.createElement('option');
-                    option.value = teja.id;
-                    option.textContent = teja.nombre;
-                    tipoTejaSelect.appendChild(option);
-                });
-            }
-
-            tipoTejaSelect.addEventListener('change', function() {
-                // Aquí actualizarías la imagen de la teja seleccionada
-                const selectedTeja = tejas.find(t => t.id === parseInt(this.value));
-                if (selectedTeja) {
-                    tejaPreview.innerHTML = `<img src="${selectedTeja.imagen}" alt="${selectedTeja.nombre}" class="max-w-xs rounded-lg">`;
-                }
-                calculateTotalCost();
             });
             
 
@@ -1213,15 +1288,22 @@
 
                 // Agregar costos externos
                 let consultoriaCost = 0
-                totalCost += datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)));
-                console.log("MAterial electrico: ",datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico))))
 
+                // Materiales electricos
+                console.log("PRIMERA FORMULA: ",(-datos_externos.material_electrico_v1 * (Math.log(selectedPanel.power/1000*quantity))+ datos_externos.material_electrico_v2));
+                console.log("SEGUNDA FOMRULA: ",((-datos_externos.material_electrico_v1 * (Math.log(selectedPanel.power/1000*quantity)) + datos_externos.material_electrico_v2)/0.6));
+                console.log("mULTIPLICR POR: ",((selectedPanel.power/1000)*quantity))
+                const material_electrico =  ((-datos_externos.material_electrico_v1 * (Math.log(selectedPanel.power/1000*quantity)) + datos_externos.material_electrico_v2)/0.6) * (selectedPanel.power/1000*quantity);  
+                totalCost += material_electrico + (datos_externos.pct_instalacion * material_electrico) + (datos_externos.pct_iva * (material_electrico + (datos_externos.pct_instalacion * material_electrico)));
+                console.log("Material electrico: ", material_electrico)
+                totalCostSinIva += material_electrico + (datos_externos.pct_instalacion * material_electrico)
 
-                totalCostSinIva += datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)
+                // Certificacion RETIE
                 certificacion_retie = (((datos_externos.certificacion_retie_v1 * Math.log((selectedPanel.power/1000)*quantity))-datos_externos.certificacion_retie_v2)/0.6 );
                 console.log("Certifiación: ",(Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * ((Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie))))
                 totalCost += (Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * ((Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie)));
                 totalCostSinIva += (Math.round(certificacion_retie)) + (datos_externos.pct_instalacion * certificacion_retie)
+                
                 // Consultoría tributaria (2.5% del subtotal)
                 if (document.getElementById('consultoriaTributaria').checked) {
                     totalCost += (totalCostSinIva * datos_externos.consultoria_tributaria) + (datos_externos.pct_iva * totalCostSinIva * datos_externos.consultoria_tributaria);
@@ -1261,7 +1343,7 @@
                     <p>Costo de CTSolis: $${((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity) + (datos_externos.pct_iva * ((288889 * solisCTQuantity) + (datos_externos.pct_instalacion * 288889 * solisCTQuantity)))).toLocaleString()}</p>
                     <p>Costo de protector(es) inversor(es): $${(( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity) + (datos_externos.pct_iva * (( 1428853 * protectorQuantity) + (datos_externos.pct_instalacion * 1428853 * protectorQuantity)))).toLocaleString()}</p>
                     ${selectedTejaId ? `<p>Teja: $${((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity) + (datos_externos.pct_iva * ((tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity ) + (datos_externos.pct_instalacion * tejas.find(t => t.id === selectedTejaId).precio_antes_de_iva * tejasQuantity)))).toLocaleString()}</p>` : ''}
-                    <p>Material eléctrico: $${(datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico) + (datos_externos.pct_iva * (datos_externos.material_electrico + (datos_externos.pct_instalacion * datos_externos.material_electrico)))).toLocaleString()}</p>
+                    <p>Material eléctrico: $${(material_electrico + (datos_externos.pct_instalacion * material_electrico) + (datos_externos.pct_iva * (material_electrico + (datos_externos.pct_instalacion * material_electrico)))).toLocaleString()}</p>
                     <p>Certificación RETIE: $${(Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie) + (datos_externos.pct_iva * (Math.round(certificacion_retie) + (datos_externos.pct_instalacion * certificacion_retie)))).toLocaleString()}</p>
                     ${estudioavailable ? `<p>Estudio de conexión: $${(estudio_precio + (datos_externos.pct_iva * estudio_precio)).toLocaleString()}</p>`:''} 
                     <p>Costo medidor bidireccional: $${(( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_iva * (( 1533333 * medidorBidireccionalQuantity) + (datos_externos.pct_instalacion * 1533333 * medidorBidireccionalQuantity)))).toLocaleString()} (Este valor puede varior dependiendo del operador de red)</p>
@@ -1291,7 +1373,7 @@
                                 nombreProducto: 'Inversor'
                             } : null,
                             
-                            "Costo ExportManager": {
+                            "Costo ExportManager": document.getElementById('exportManager').checked ? {
                                 total: ((415942 * exportManagerQuantity) + 
                                     (datos_externos.pct_instalacion * 415942 * exportManagerQuantity) + 
                                     (datos_externos.pct_iva * ((415942 * exportManagerQuantity) + 
@@ -1299,7 +1381,7 @@
                                 cantidad: exportManagerQuantity,
                                 precioUnitario: 415942,
                                 nombreProducto: 'ExportManager'
-                            },
+                            } : null,
                             
                             "Costo de CTSolis": {
                                 total: ((288889 * solisCTQuantity) + 
@@ -1332,12 +1414,9 @@
                             } : null,
                             
                             "Material eléctrico": {
-                                total: (datos_externos.material_electrico + 
-                                    (datos_externos.pct_instalacion * datos_externos.material_electrico) + 
-                                    (datos_externos.pct_iva * (datos_externos.material_electrico + 
-                                    (datos_externos.pct_instalacion * datos_externos.material_electrico)))),
+                                total: material_electrico + (datos_externos.pct_instalacion * material_electrico) + (datos_externos.pct_iva * (material_electrico + (datos_externos.pct_instalacion * material_electrico))),
                                 cantidad: 1,
-                                precioUnitario: datos_externos.material_electrico,
+                                precioUnitario: material_electrico,
                                 nombreProducto: 'Material Eléctrico'
                             },
                             
@@ -1406,8 +1485,17 @@
                                 cantidad: 1,
                                 precioUnitario: totalCost,
                                 nombreProducto: 'Costo Total'
+                            },
+                            "Datos ROI":{
+                                costoComercializacion: parseFloat(document.getElementById("costoComercializacion").value) || 0,
+                                energiaAutoconsumo: parseFloat(document.getElementById("energiaAutoconsumo").value) || 0,
+                                energiaPermuta: parseFloat(document.getElementById("energiaPermuta").value) || 0,
+                                energiaExcedente: parseFloat(document.getElementById("energiaExcedente").value) || 0,
+                                potencia_pico: parseFloat((selectedPanel.power/1000)*quantity) || 0,
+                                costPerKwh: parseFloat(document.getElementById("costPerKwh").value) || 0,
+                                totalBill: parseFloat(document.getElementById("totalBill").value) || 0,
+                                beneficioTributario: document.getElementById('consultoriaTributaria').checked
                             }
-                            
                             
                         };
             }

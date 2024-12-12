@@ -4,13 +4,16 @@ class DatosExternos(models.Model):
     hsp = models.FloatField(help_text="Horas Solar Pico")
     security_factor = models.FloatField(help_text="Factor de seguridad")
     imprevistos = models.FloatField(help_text="Porcentaje para imprevistos")
-    material_electrico = models.FloatField(help_text="Costo de material eléctrico")
+    material_electrico_v1 = models.FloatField(help_text="valor #1 para la operacion de material electrico", default=0)
+    material_electrico_v2 = models.FloatField(help_text="valor #2 para la operacion de material electrico", default=0)
     certificacion_retie_v1 = models.FloatField(help_text="valor #1 para la operacion de certificación RETIE", default=0)
     certificacion_retie_v2 = models.FloatField(help_text="valor #2 para la operacion de certificación RETIE", default=0)
     pct_iva = models.FloatField(help_text="Porcentaje de IVA", default=0.19)
     pct_instalacion = models.FloatField(help_text="Porcentaje de instalación", default=0.10)
     consultoria_tributaria = models.FloatField(help_text="Porcentaje de consultoria tributaria", default=0.025)
     proteccionCNO = models.FloatField(help_text="Costo de protección CNO", default=200000)
+    ipc = models.FloatField(help_text="Porcentaje de IPC", default=0.13)
+    valor_generacion = models.FloatField(help_text="Valor de generación de energia en bolsa", default=348.02)
 
     class Meta:
         verbose_name = "Datos Externos"
