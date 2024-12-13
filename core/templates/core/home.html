@@ -1294,8 +1294,8 @@
                 console.log("SEGUNDA FOMRULA: ",((-datos_externos.material_electrico_v1 * (Math.log(selectedPanel.power/1000*quantity)) + datos_externos.material_electrico_v2)/0.6));
                 console.log("mULTIPLICR POR: ",((selectedPanel.power/1000)*quantity))
                 const material_electrico =  ((-datos_externos.material_electrico_v1 * (Math.log(selectedPanel.power/1000*quantity)) + datos_externos.material_electrico_v2)/0.6) * (selectedPanel.power/1000*quantity);  
-                totalCost += material_electrico + (datos_externos.pct_instalacion * material_electrico) + (datos_externos.pct_iva * (material_electrico + (datos_externos.pct_instalacion * material_electrico)));
-                console.log("Material electrico: ", material_electrico)
+                totalCost += (material_electrico + (datos_externos.pct_instalacion * material_electrico) + (datos_externos.pct_iva * (material_electrico + (datos_externos.pct_instalacion * material_electrico))));
+                console.log("Material electrico: ", (material_electrico + (datos_externos.pct_instalacion * material_electrico) + (datos_externos.pct_iva * (material_electrico + (datos_externos.pct_instalacion * material_electrico)))))
                 totalCostSinIva += material_electrico + (datos_externos.pct_instalacion * material_electrico)
 
                 // Certificacion RETIE
@@ -1493,8 +1493,10 @@
                                 energiaExcedente: parseFloat(document.getElementById("energiaExcedente").value) || 0,
                                 potencia_pico: parseFloat((selectedPanel.power/1000)*quantity) || 0,
                                 costPerKwh: parseFloat(document.getElementById("costPerKwh").value) || 0,
-                                totalBill: parseFloat(document.getElementById("totalBill").value) || 0,
-                                beneficioTributario: document.getElementById('consultoriaTributaria').checked
+                                totalBill: parseFloat(document.getElementById('totalBill').value.split('$')[1].replaceAll('.','')) || 0,
+                                beneficioTributario: document.getElementById('consultoriaTributaria').checked,
+                                totalCost: totalCost,
+                                totalCostSinIva: totalCostSinIva
                             }
                             
                         };

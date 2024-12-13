@@ -15,6 +15,8 @@ from reportlab.lib.colors import Color
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
+import numpy_financial as npf
+
 import os
 
 def home(request):
@@ -83,7 +85,7 @@ def home(request):
         inversor_sales_count = inversor['sales_count']
         inversor_price = inversor['list_price']
         inversores_data.append({'id': inversor_id, 'name': inversor_name, 'power': inversor_power, 'inversor_price': inversor_price, 'sales_count': inversor_sales_count})
-
+    
     # Convertir a JSON
     tejas_data = json.dumps(tejas_data)
     paneles_data = json.dumps(paneles_data)
@@ -394,12 +396,12 @@ def generate_ROI(data):
     datos_externos = DatosExternos.objects.first()
     print("DATA:", data)
     generacion_PV = datos_externos.hsp * datos_externos.security_factor * data.get('potencia_pico') * 360
-    ipc = datos_externos.ipc
+    pct_ipc = datos_externos.ipc
     energia_autoconsumo = generacion_PV * (data.get("energiaAutoconsumo")/100)
     energia_permuta = generacion_PV * (data["energiaPermuta"]/100)
     energia_excedente = generacion_PV * (data["energiaExcedente"]/100)
-    costo_autoconsumo = data["totalBill"]
-    costo_permuta = data["costoComercializacion"] - data["costPerKwh"]
+    costo_autoconsumo = data["totalBill"]/1000
+    costo_permuta = data["costPerKwh"] - data["costoComercializacion"] 
     costo_excedente = data["costoComercializacion"] + datos_externos.valor_generacion
     print("generacion_PV", generacion_PV)
     print("energia_autoconsumo", energia_autoconsumo)
@@ -408,10 +410,313 @@ def generate_ROI(data):
     print("costo_autoconsumo", costo_autoconsumo)
     print("costo_permuta", costo_permuta)
     print("costo_excedente", costo_excedente)
+    print()
+
+    ahorro_total = (energia_autoconsumo * costo_autoconsumo) + (energia_permuta * costo_permuta) + (energia_excedente * costo_excedente)
+    pct_depreciacion = 0.2
+    depreciacion = data['totalCost'] * pct_depreciacion #Solo aplica para año 2,3,4,5,6 
+    beneficio_depreciacion = depreciacion * datos_externos.tarifa_impuesto_renta
+    rentaliquida = 0.05
+    base_descontable_por_renta =  data['totalCost'] * rentaliquida # APlica solo para años desde el 2 hasta el 11
+    beneficio_renta = base_descontable_por_renta * datos_externos.tarifa_impuesto_renta
+    devolucion_iva = data['totalCost'] - data['totalCostSinIva']
+    costo_administracion = datos_externos.AOM_MWP_ANUAL * (data['potencia_pico']/1000)
+    ahorro_neto = ahorro_total + beneficio_depreciacion + beneficio_renta + costo_administracion
+    flujo_caja_acumulado = ahorro_neto - data['totalCost']
+
+def validate_input_data(data, datos_externos):
+    required_fields = [
+        'totalCost', 'potencia_pico', 'energiaAutoconsumo', 
+        'energiaPermuta', 'energiaExcedente', 'totalBill', 
+        'costoComercializacion', 'costPerKwh', 'totalCostSinIva'
+    ]
+    
+    missing_fields = []
+    
+    # Validar campos requeridos en data
+    for field in required_fields:
+        if field not in data or data[field] is None:
+            missing_fields.append(field)
+            
+    # Validar datos externos requeridos
+    external_fields = [
+        'hsp', 'security_factor', 'ipc', 'tarifa_impuesto_renta',
+        'valor_generacion', 'AOM_MWP_ANUAL'
+    ]
+    
+    for field in external_fields:
+        if not hasattr(datos_externos, field) or getattr(datos_externos, field) is None:
+            missing_fields.append(f'datos_externos.{field}')
+            
+    if missing_fields:
+        raise ValueError(f"Faltan los siguientes campos requeridos: {', '.join(missing_fields)}")
+    
+    # Validar que los valores numéricos sean válidos
+    try:
+        float(data['totalCost'])
+        float(data['potencia_pico'])
+        float(data['energiaAutoconsumo'])
+        float(data['energiaPermuta'])
+        float(data['energiaExcedente'])
+        float(data['totalBill']/1000)
+        float(data['costoComercializacion'])
+        float(data['costPerKwh'])
+        float(data['totalCostSinIva'])
+    except (ValueError, TypeError):
+        raise ValueError("Algunos campos contienen valores numéricos inválidos")
+
+def calculate_roi_table(data, datos_externos):
+    try:
+        # Valores iniciales
+        initial_cost = float(data['totalCost'])
+        potencia_pico = float(data['potencia_pico'])
+        pct_ipc = float(datos_externos.ipc)
+        pct_depreciacion = 0.2
+        rentaliquida = 0.05
+        
+        # Lista para almacenar resultados anuales
+        annual_results = []
+        
+        # Cálculos iniciales año 1
+        generacion_PV = round(datos_externos.hsp * datos_externos.security_factor * potencia_pico * 360, 2)
+        energia_autoconsumo = round(generacion_PV * (float(data["energiaAutoconsumo"])/100) ,2)
+        energia_permuta = generacion_PV * (float(data["energiaPermuta"])/100)
+        energia_excedente = generacion_PV * (float(data["energiaExcedente"])/100)
+        
+        # Ajuste de los costos
+        costo_autoconsumo = round(float(data["totalBill"]), 2)  # Ya está en costo total
+        costo_permuta = float(data["costPerKwh"]) - float(data["costoComercializacion"])
+        costo_excedente = float(data["costoComercializacion"]) + float(datos_externos.valor_generacion)
+        
+        # Primer año
+        ahorro_total = 0
+        ahorro_autoconsumo = energia_autoconsumo * (costo_autoconsumo / 1000)  # Convertir a kWh
+        ahorro_permuta = energia_permuta * costo_permuta
+        ahorro_excedente = energia_excedente * costo_excedente
+        ahorro_total = ahorro_autoconsumo + ahorro_permuta + ahorro_excedente
+        
+        beneficio_depreciacion = 0
+        beneficio_renta = 0
+        costo_administracion = 0
+        devolucion_iva = 0
+        ahorro_neto = ahorro_total
+        flujo_caja = -initial_cost
+        flujo_caja_acumulado = flujo_caja
+        
+        annual_results.append({
+            'año': 0,
+            'flujo_caja': flujo_caja,
+            'flujo_caja_acumulado': flujo_caja_acumulado,
+            'generacion_PV': generacion_PV,
+            'ahorro_total': ahorro_total,
+            'ahorro_neto': ahorro_neto
+
+        })
+        generacion_PV_periodoX = generacion_PV
+        valorX = 0
+        # Cálculos para los siguientes años (1-25)
+        for year in range(1, 26):
+            # Degradación de generación PV
+            if year > 1:
+                if year == 11:
+                    valorX = 0.00666666666667
+                    degradacion = (0.02 + (0.01 * (year - 2))) + valorX
+
+                elif year > 11:
+                    valorX = 0.00666666666667 * (year - 10)
+                    degradacion = (0.02 + (0.01 * (10 - 2))) + valorX
+                    
+                elif year < 11:
+                    degradacion = (0.02 + (0.01 * (year - 2))) + valorX
+                
+                generacion_PV_periodoX = (generacion_PV * ((1 - degradacion )))
+            
+            # Actualización de costos
+            if year == 2:
+                print("pct_ipc: ",pct_ipc)
+                costo_autoconsumo *= (1 + pct_ipc)
+                costo_permuta *= (1 + pct_ipc)
+                costo_excedente *= (1 + pct_ipc)
+            elif year > 2:
+                costo_autoconsumo *= 1.057
+                costo_permuta *= 1.057
+                costo_excedente *= 1.057
+            
+            # Cálculo de energías y ahorros
+            energia_autoconsumo = round(generacion_PV_periodoX * (float(data["energiaAutoconsumo"])/100),2)
+            energia_permuta = generacion_PV_periodoX * (float(data["energiaPermuta"])/100)
+            energia_excedente = generacion_PV_periodoX * (float(data["energiaExcedente"])/100)
+            
+            ahorro_autoconsumo = energia_autoconsumo * (costo_autoconsumo / 1000)
+            ahorro_permuta = energia_permuta * costo_permuta
+            ahorro_excedente = energia_excedente * costo_excedente
+            ahorro_total = ahorro_autoconsumo + ahorro_permuta + ahorro_excedente
+            # Beneficios y costos adicionales
+            beneficio_depreciacion = (initial_cost * pct_depreciacion * 
+                                    datos_externos.tarifa_impuesto_renta 
+                                    if 2 <= year <= 6 else 0)
+            
+            beneficio_renta = (initial_cost * rentaliquida * 
+                             datos_externos.tarifa_impuesto_renta 
+                             if 2 <= year <= 11 else 0)
+            
+            devolucion_iva = (float(data['totalCost']) - float(data['totalCostSinIva']) 
+                            if year == 2 else 0)
+            
+            if year >= 4:
+                if year == 4:
+                    costo_administracion = datos_externos.AOM_MWP_ANUAL * (potencia_pico/1000)
+                else:
+                    factor = pct_ipc if year == 5 else 0.057
+                    costo_administracion *= (1 + factor)
+            
+            # Cálculo del flujo de caja
+            ahorro_neto = ahorro_total + beneficio_depreciacion + beneficio_renta
+            if year == 2:
+                ahorro_neto += devolucion_iva
+            if year >= 4:
+                ahorro_neto -= costo_administracion
+                
+            flujo_caja = ahorro_neto
+            flujo_caja_acumulado = annual_results[-1]['flujo_caja_acumulado'] + flujo_caja
+            
+            annual_results.append({
+                'año': year,
+                'flujo_caja': flujo_caja,
+                'flujo_caja_acumulado': flujo_caja_acumulado,
+                'ahorro_total': ahorro_total,
+                'ahorro_neto': ahorro_neto,
+                'generacion_PV': generacion_PV_periodoX
+            })
+        
+        # Extraer flujos para cálculos financieros
+        flujos = [result['flujo_caja'] for result in annual_results]
+        
+        # Calcular TIR
+        def npv(rate, cashflows):
+            return sum(cf / (1 + rate) ** i for i, cf in enumerate(cashflows))
+        
+        def irr(cashflows, iterations=1000):
+            print("cashflows:", cashflows)
+            rate = 0.1  # Tasa inicial
+            for i in range(iterations):
+                rate_npv = npv(rate, cashflows)
+                if abs(rate_npv) < 0.01:
+                    return rate
+                rate += rate_npv * 0.0001
+            return None
+        tir = npf.irr(flujos)
+        print("TIR:", tir)
+        vpn = npv(0.10, flujos)  # Tasa de descuento del 10%
+        roi = 100/(tir * 100 )
+        
+        return annual_results, tir, vpn, roi
+        
+    except Exception as e:
+        print(f"Error en calculate_roi_table: {str(e)}")
+        return None, None, None, None
+    
+
+def generate_roi_table(data, datos_externos, elements):
+    results, tir, vpn, roi = calculate_roi_table(data, datos_externos)
+    
+    # Primera tabla (solo datos de flujos)
+    table_data = [['Año', 'Generación PV', 'Ahorro Total', 'Ahorro Neto', 'Flujo Acumulado']]
+    
+    for row in results:
+        table_data.append([
+            str(row['año']),
+            f"{row['generacion_PV']:,.3f}",
+            f"${row['ahorro_total']:,.0f}",
+            f"${row['ahorro_neto']:,.0f}",
+            f"${row['flujo_caja_acumulado']:,.0f}"
+        ])
+    
+    # Crear la tabla principal sin los indicadores
+    table = Table(table_data, colWidths=[0.7*inch, 1.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+    
+    # Estilo para la tabla principal
+    style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), VERDE_HERSIC),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'NUNITO_SANS_BOLD'),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('FONTNAME', (0, 1), (-1, -1), 'NUNITO_SANS'),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ])
+    
+    table.setStyle(style)
+    elements.append(table)
+    # Agregar espacio entre tablas
+    elements.append(PageBreak())
+
+    
+    
+    # Tabla de indicadores financieros (más compacta)
+    indicators_data = [
+        ['Indicador', 'Valor'],
+        ['TIRE (Tasa Interna de Retorno)', f"{tir*100:.2f}%"],
+        ['ROI (Retorno sobre la Inversión)', f"{roi:.2f}"],
+    ]
+    
+    indicators_table = Table(indicators_data, colWidths=[3*inch, 1.5*inch])
+    
+    indicators_style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), VERDE_HERSIC),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'NUNITO_SANS_BOLD'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+        ('FONTNAME', (0, 1), (-1, -1), 'NUNITO_SANS'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BACKGROUND', (0, 1), (0, -1), Color(0.95, 0.95, 0.95)),
+    ])
+    
+    indicators_table.setStyle(indicators_style)
+    
+    # Título de la sección
+    elements.append(Paragraph(
+        "Indicadores Financieros del Proyecto",
+        ParagraphStyle(
+            'IndicatorTitle',
+            fontName='NUNITO_SANS_BOLD',
+            fontSize=10,
+            spaceAfter=10,
+            textColor=Color(0.06, 0.32, 0.55)
+        )
+    ))
+    elements.append(Spacer(1, 10))
+    elements.append(indicators_table)
+    
+    # Agregar descripciones como párrafos separados
+    descriptions = [
+        ("TIRE:", "Representa la rentabilidad promedio anual del proyecto. Un valor mayor que la tasa de descuento indica que el proyecto es rentable."),
+        ("ROI:", "Mide el beneficio obtenido en relación con la inversión inicial. Un valor positivo indica que el proyecto genera ganancias."),
+    ]
+    
+    elements.append(Spacer(1, 20))
+    
+    for title, desc in descriptions:
+        elements.append(Paragraph(
+            f"<b>{title}</b> {desc}",
+            ParagraphStyle(
+                'Description',
+                fontName='NUNITO_SANS',
+                fontSize=8,
+                spaceAfter=5,
+                leading=10
+            )
+        ))
+    
+    return None      
+    
 
 def generate_pdf(request):
     if request.method == 'POST':
-        try:
             data = json.loads(request.body)
             generate_ROI(data['costSummary'].get('Datos ROI'))
             payment_type = data.get('paymentType', 'contado')
@@ -513,6 +818,19 @@ def generate_pdf(request):
             # Tabla de cotización
             elements.append(generate_quote_table(data))
             elements.append(Spacer(1, 20))
+
+
+            elements.append(PageBreak())
+            elements.append(Paragraph('Análisis de Retorno de Inversión', 
+                                   ParagraphStyle('Heading1',
+                                                fontSize=20,
+                                                alignment=TA_CENTER)))
+            elements.append(Spacer(1, 20))
+            
+            # Generar y agregar la tabla ROI
+            datos_externos = DatosExternos.objects.first()
+            generate_roi_table(data['costSummary'].get('Datos ROI'), datos_externos, elements)
+
             
             # Si es pago a crédito, agregar tabla de amortización
             if payment_type == 'credito' and credit_years > 0:
@@ -529,8 +847,6 @@ def generate_pdf(request):
             doc.build(elements, onFirstPage=doc.header, onLaterPages=doc.header)
             return response
             
-        except Exception as e:
-            print(f"Error generando PDF: {str(e)}")
-            return HttpResponse(f'Error generando PDF: {str(e)}', status=500)
+        
     
     return HttpResponse('Método no permitido', status=405)

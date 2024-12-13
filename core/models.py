@@ -14,6 +14,8 @@ class DatosExternos(models.Model):
     proteccionCNO = models.FloatField(help_text="Costo de protección CNO", default=200000)
     ipc = models.FloatField(help_text="Porcentaje de IPC", default=0.13)
     valor_generacion = models.FloatField(help_text="Valor de generación de energia en bolsa", default=348.02)
+    tarifa_impuesto_renta = models.FloatField(help_text="Tarifa de impuesto de renta", default=0.35)
+    AOM_MWP_ANUAL = models.FloatField(help_text="AOM MWp/anual", default=45000000)
 
     class Meta:
         verbose_name = "Datos Externos"
